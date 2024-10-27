@@ -12,6 +12,7 @@ export interface SerializedCandidate {
 export interface Candidate {
   tile: Tile;
   candidates: readonly Tile[];
+  // next shanten if draw a candidate
   shanten: number;
 }
 
