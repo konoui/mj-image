@@ -1,4 +1,4 @@
-import { Tile, Block, BlockAnKan } from "../core/parser";
+import { Tile, Block, BlockAnKan, BlockHand } from "../core/parser";
 import { Svg, G, Image, Text, Use, Symbol } from "@svgdotjs/svg.js";
 import { FONT_FAMILY, TILE_CONTEXT, TYPE, OPERATOR, BLOCK } from "../core";
 import { assert } from "../myassert";
@@ -10,6 +10,11 @@ export interface ImageHelperConfig {
   imageHostUrl?: string;
   imageExt?: "svg" | "webp";
   svgSprite?: boolean;
+}
+
+export interface DrawnOptions {
+  doraText?: boolean;
+  tsumoText?: boolean;
 }
 
 const blockImageSize = (
@@ -257,7 +262,7 @@ export class ImageHelper extends BaseHelper {
   }
 }
 
-const getBlockCreators = (h: ImageHelper) => {
+const getBlockCreators = (h: ImageHelper, options?: DrawnOptions) => {
   const scale = h.scale;
   const lookup = {
     [BLOCK.CHI]: function (block: Block) {
@@ -290,16 +295,30 @@ const getBlockCreators = (h: ImageHelper) => {
       return { ...size, e: g };
     },
     [BLOCK.IMAGE_DORA]: function (block: Block) {
+      block =
+        options?.doraText == false
+          ? new BlockHand([block.tiles[0].clone({ remove: OPERATOR.DORA })])
+          : block;
       const size = blockImageSize(block, scale);
       const g = new G();
-      const img = h.createTextImage(block.tiles[0], 0, 0, "(ドラ)");
+      const img =
+        options?.doraText === false
+          ? h.createBlockHandDiscard(block)
+          : h.createTextImage(block.tiles[0], 0, 0, "(ドラ)");
       g.add(img);
       return { ...size, e: g };
     },
     [BLOCK.TSUMO]: function (block: Block) {
+      block =
+        options?.tsumoText == false
+          ? new BlockHand([block.tiles[0].clone({ remove: OPERATOR.TSUMO })])
+          : block;
       const size = blockImageSize(block, scale);
       const g = new G();
-      const img = h.createTextImage(block.tiles[0], 0, 0, "(ツモ)");
+      const img =
+        options?.tsumoText === false
+          ? h.createBlockHandDiscard(block)
+          : h.createTextImage(block.tiles[0], 0, 0, "(ツモ)");
       g.add(img);
       return { ...size, e: g };
     },
@@ -346,7 +365,11 @@ interface MySVGElement {
   height: number;
 }
 
-export const createHand = (helper: ImageHelper, blocks: Block[]) => {
+export const createHand = (
+  helper: ImageHelper,
+  blocks: Block[],
+  options?: DrawnOptions
+) => {
   const { maxHeight, sumWidth } = blocks.reduce(
     (acc: { maxHeight: number; sumWidth: number }, b: Block) => {
       const size = blockImageSize(b, helper.scale);
@@ -359,7 +382,7 @@ export const createHand = (helper: ImageHelper, blocks: Block[]) => {
   const viewBoxHeight = maxHeight;
   const viewBoxWidth = sumWidth + (blocks.length - 1) * helper.blockMargin;
 
-  const creators = getBlockCreators(helper);
+  const creators = getBlockCreators(helper, options);
 
   const elms: MySVGElement[] = [];
   for (let block of blocks) {
@@ -384,11 +407,15 @@ export const drawBlocks = (
   svg: Svg,
   blocks: Block[],
   config: ImageHelperConfig = {},
-  params: { responsive: boolean } = { responsive: false }
+  options: { responsive?: boolean } & DrawnOptions = {
+    responsive: false,
+    doraText: true,
+    tsumoText: true,
+  }
 ) => {
   const helper = new ImageHelper(config);
-  const hand = createHand(helper, blocks);
-  if (!params.responsive) svg.size(hand.width, hand.height);
+  const hand = createHand(helper, blocks, options);
+  if (!options.responsive) svg.size(hand.width, hand.height);
   svg.viewbox(0, 0, hand.width, hand.height);
   svg.add(hand.e);
 };

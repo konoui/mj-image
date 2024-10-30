@@ -1,6 +1,6 @@
 import { SVG } from "@svgdotjs/svg.js";
 import { Parser } from "../core/parser";
-import { drawBlocks } from "../image/image";
+import { createHand, drawBlocks, ImageHelper } from "../image/image";
 
 import { loadTestData, initSvgDOM } from "./utils/helper";
 
@@ -108,6 +108,18 @@ describe("generate svg", () => {
       got,
       update
     );
+    expect(want.toString()).toBe(got);
+  });
+
+  test("dora/tsumo without text", () => {
+    const blocks = new Parser("123s,t2s,d3s").parse();
+    const draw = SVG();
+    drawBlocks(draw, blocks, helperConfig, {
+      doraText: false,
+      tsumoText: false,
+    });
+    const got = draw.svg();
+    const want = loadTestData("dora-tsumo-without-text.svg", got, update);
     expect(want.toString()).toBe(got);
   });
 

@@ -658,7 +658,11 @@ function isOperator(l: Lexer): [Tile, boolean] {
       for (let i = 0; i < found.length; i++) l.readChar();
       if (found.some((v) => v == OPERATOR.RED) && n != 5)
         throw new Error(`found ${OPERATOR.RED} but number is not 5: ${n}`);
-      let tile = new Tile(TYPE.BACK, n, found);
+      const tile = new Tile(TYPE.BACK, n, found);
+      if (tile.has(OPERATOR.DORA) && tile.has(OPERATOR.TSUMO))
+        throw new Error(
+          `unable to specify both ${OPERATOR.DORA} and ${OPERATOR.TSUMO}`
+        );
       return [tile, true];
     }
   }
