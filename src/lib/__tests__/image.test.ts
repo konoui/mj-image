@@ -112,11 +112,12 @@ describe("generate svg", () => {
   });
 
   test("dora/tsumo without text", () => {
-    const blocks = new Parser("123s,t2s,d3s").parse();
+    const blocks = new Parser("123s,-123s, t1s").parse();
     const draw = SVG();
     drawBlocks(draw, blocks, helperConfig, {
       doraText: false,
       tsumoText: false,
+      responsive: true,
     });
     const got = draw.svg();
     const want = loadTestData("dora-tsumo-without-text.svg", got, update);

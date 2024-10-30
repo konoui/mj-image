@@ -12,15 +12,12 @@ export interface ImageHelperConfig {
   svgSprite?: boolean;
 }
 
-export interface DrawnOptions {
+export interface DrawOptions {
   doraText?: boolean;
   tsumoText?: boolean;
 }
 
-const blockImageSize = (
-  b: Block,
-  scale: number
-): { width: number; height: number } => {
+const blockImageSize = (b: Block, scale: number) => {
   const size = tileImageSize(b.tiles[0], scale);
   const bh = size.baseHeight;
   const bw = size.baseWidth;
@@ -262,7 +259,7 @@ export class ImageHelper extends BaseHelper {
   }
 }
 
-const getBlockCreators = (h: ImageHelper, options?: DrawnOptions) => {
+const getBlockCreators = (h: ImageHelper, options?: DrawOptions) => {
   const scale = h.scale;
   const lookup = {
     [BLOCK.CHI]: function (block: Block) {
@@ -303,7 +300,7 @@ const getBlockCreators = (h: ImageHelper, options?: DrawnOptions) => {
       const g = new G();
       const img =
         options?.doraText === false
-          ? h.createBlockHandDiscard(block)
+          ? h.createImage(block.tiles[0], 0, 0)
           : h.createTextImage(block.tiles[0], 0, 0, "(ドラ)");
       g.add(img);
       return { ...size, e: g };
@@ -317,7 +314,7 @@ const getBlockCreators = (h: ImageHelper, options?: DrawnOptions) => {
       const g = new G();
       const img =
         options?.tsumoText === false
-          ? h.createBlockHandDiscard(block)
+          ? h.createImage(block.tiles[0], 0, 0)
           : h.createTextImage(block.tiles[0], 0, 0, "(ツモ)");
       g.add(img);
       return { ...size, e: g };
@@ -368,28 +365,23 @@ interface MySVGElement {
 export const createHand = (
   helper: ImageHelper,
   blocks: Block[],
-  options?: DrawnOptions
+  options?: DrawOptions
 ) => {
-  const { maxHeight, sumWidth } = blocks.reduce(
-    (acc: { maxHeight: number; sumWidth: number }, b: Block) => {
-      const size = blockImageSize(b, helper.scale);
-      const v = size.height > acc.maxHeight ? size.height : acc.maxHeight;
-      return { maxHeight: v, sumWidth: acc.sumWidth + size.width };
-    },
-    { maxHeight: 0, sumWidth: 0 }
-  );
-
-  const viewBoxHeight = maxHeight;
-  const viewBoxWidth = sumWidth + (blocks.length - 1) * helper.blockMargin;
-
   const creators = getBlockCreators(helper, options);
 
+  let maxHeight = 0;
+  let sumWidth = 0;
   const elms: MySVGElement[] = [];
   for (let block of blocks) {
     const fn = creators[block.type];
     const elm = fn(block);
+    sumWidth += elm.width;
+    maxHeight = elm.height > maxHeight ? elm.height : maxHeight;
     elms.push(elm);
   }
+
+  const viewBoxHeight = maxHeight;
+  const viewBoxWidth = sumWidth + (blocks.length - 1) * helper.blockMargin;
 
   const hand = new G();
   let pos = 0;
@@ -407,7 +399,7 @@ export const drawBlocks = (
   svg: Svg,
   blocks: Block[],
   config: ImageHelperConfig = {},
-  options: { responsive?: boolean } & DrawnOptions = {
+  options: { responsive?: boolean } & DrawOptions = {
     responsive: false,
     doraText: true,
     tsumoText: true,
