@@ -94,8 +94,8 @@ export class Tile {
   clone(override?: {
     t?: Type;
     n?: number;
-    remove?: Operator;
-    add?: Operator;
+    remove?: Operator | Operator[];
+    add?: Operator | Operator[];
     removeAll?: boolean;
   }) {
     const t = override?.t ?? this.t;
@@ -103,9 +103,17 @@ export class Tile {
 
     const ops = override?.removeAll
       ? []
-      : this.ops.filter((v) => override?.remove != v);
+      : this.ops.filter((v) =>
+          Array.isArray(override?.remove)
+            ? !override.remove.includes(v)
+            : override?.remove != v
+        );
+
     const s = new Set([...ops]);
-    if (override?.add) s.add(override.add);
+    if (override?.add) {
+      if (Array.isArray(override.add)) override.add.forEach((op) => s.add(op));
+      else s.add(override.add);
+    }
     return new Tile(t, n, Array.from(s));
   }
 
