@@ -763,11 +763,12 @@ type SerializedBoardContext = Omit<
   BoardContext,
   "doraMarkers" | "blindDoraMarkers"
 > & {
-  doraMarkers: string[];
-  blindDoraMarkers?: string[];
+  doraMarkers: readonly string[];
+  blindDoraMarkers?: readonly string[];
 };
+
 export type SerializedWinResult = Omit<WinResult, "hand" | "boardContext"> & {
-  hand: SerializedBlock[];
+  hand: readonly SerializedBlock[];
   boardContext: SerializedBoardContext;
 };
 
@@ -777,7 +778,7 @@ export interface BoardContext {
   round: Round;
   myWind: Wind;
   ronWind?: Wind;
-  sticks?: { reach: number; dead: number };
+  sticks?: { readonly reach: number; readonly dead: number };
   reached?: 1 | 2;
   replacementWin?: boolean;
   quadWin?: boolean;
@@ -787,15 +788,15 @@ export interface BoardContext {
 }
 
 export interface WinResult {
-  deltas: { [w in Wind]: number };
+  deltas: { readonly [w in Wind]: number };
   sum: number;
   fu: number;
-  points: {
+  points: readonly {
     name: string;
     double: number;
   }[];
   point: number;
-  hand: Block[];
+  hand: Block[]; // TODO readonly
   boardContext: BoardContext;
 }
 
@@ -807,7 +808,7 @@ export class DoubleCalculator {
     roundWind: Tile;
     myWind: Tile;
     reached: 0 | 1 | 2;
-    sticks: { reach: number; dead: number };
+    sticks: { readonly reach: number; readonly dead: number };
     replacementWin: boolean;
     quadWin: boolean;
     finalWallWin: boolean;

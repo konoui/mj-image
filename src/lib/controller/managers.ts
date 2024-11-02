@@ -1,5 +1,13 @@
 import { assert } from "../myassert";
-import { Wind, Round, TYPE, WIND, createWindMap, OPERATOR } from "../core/";
+import {
+  Wind,
+  Round,
+  TYPE,
+  WIND,
+  createWindMap,
+  OPERATOR,
+  ROUND,
+} from "../core/";
 import { TupleOfSize } from "../calculator";
 import { Type, Tile } from "../core/parser";
 import { nextWind, nextRound } from "../core";
@@ -14,12 +22,6 @@ export class ScoreManager {
   }
   reach(id: string) {
     this.m[id] -= this.reachValue;
-  }
-  /**
-   * 立直後のロンに対する立直棒の戻し
-   */
-  restoreReachStick(id: string) {
-    this.m[id] += this.reachValue;
   }
   update(
     result: {
@@ -47,7 +49,7 @@ export class PlaceManager {
     initial: { [key: string]: Wind },
     params?: { round: Round; sticks: { reach: number; dead: number } }
   ) {
-    this.round = params?.round ?? "1w1";
+    this.round = params?.round ?? ROUND.E1;
     this.sticks = params?.sticks ?? { reach: 0, dead: 0 };
     this.pToW = initial;
     for (let playerID in this.pToW) this.wToP[this.pToW[playerID]] = playerID;
@@ -70,10 +72,6 @@ export class PlaceManager {
     const next = nextRound(this.round);
     this.round = next;
     this.update();
-  }
-  decrementReachStick() {
-    this.sticks.reach--;
-    assert(this.sticks.reach >= 0);
   }
   resetDeadStick() {
     this.sticks.dead = 0;
@@ -117,7 +115,6 @@ export class Counter {
   };
   safeMap = createWindMap({} as { [name: string]: boolean }, true);
   constructor(public disable = false) {}
-  // FIXME get red
   get(t: Tile) {
     if (t.t == TYPE.BACK) return 0;
     return this.c[t.t][t.n];
@@ -143,7 +140,6 @@ export class Counter {
     return this.safeMap[targetUser][this.key(k, n)];
   }
   private key(k: Type, n: number) {
-    if (n == 0) n = 5;
     return `${k}${n}`;
   }
 
