@@ -91,20 +91,36 @@ export class Hand {
       throw new Error(`unexpected block ${b.type} ${b.toString()}`);
     }
   }
-  get hands() {
-    const tiles: Tile[] = [];
+  forEach(
+    fn: (type: Type, n: number) => void,
+    options?: {
+      filterBy?: Type[];
+      excludes?: Type[];
+      skipBack?: boolean;
+    }
+  ) {
     for (let t of Object.values(TYPE)) {
+      if (options?.skipBack && t == TYPE.BACK) continue;
+      if (options?.filterBy != null && !options.filterBy.some((v) => v == t))
+        continue;
+      if (options?.excludes?.includes(t)) continue;
       for (let n = 1; n < this.getArrayLen(t); n++) {
-        let count = this.get(t, n);
-        if (t != TYPE.Z && n == 5 && this.get(t, 0) > 0) {
-          count -= this.get(t, 0); // for red
-          tiles.push(new Tile(t, 5, [OPERATOR.RED]));
-        }
-        for (let i = 0; i < count; i++) {
-          tiles.push(new Tile(t, n));
-        }
+        fn(t, n);
       }
     }
+  }
+  get hands() {
+    const tiles: Tile[] = [];
+    this.forEach((t, n) => {
+      let count = this.get(t, n);
+      if (t != TYPE.Z && n == 5 && this.get(t, 0) > 0) {
+        count -= this.get(t, 0); // for red
+        tiles.push(new Tile(t, n, [OPERATOR.RED]));
+      }
+      for (let i = 0; i < count; i++) {
+        tiles.push(new Tile(t, n));
+      }
+    });
     if (this.drawn != null) {
       const drawn = this.drawn;
       const idx = tiles.findIndex((t) => t.equals(drawn));
@@ -298,13 +314,13 @@ export class ShantenCalculator {
     if (this.hand.called.length > 0) return Infinity;
     let nPairs = 0;
     let nIsolated = 0;
-    for (let t of Object.values(TYPE)) {
-      if (t == TYPE.BACK) continue;
-      for (let n = 1; n < this.hand.getArrayLen(t); n++) {
+    this.hand.forEach(
+      (t, n) => {
         if (this.hand.get(t, n) == 2) nPairs++;
         if (this.hand.get(t, n) == 1) nIsolated++;
-      }
-    }
+      },
+      { skipBack: true }
+    );
 
     if (nPairs > 7) nPairs = 7;
     if (nPairs + nIsolated >= 7) nIsolated = 7 - nPairs;
@@ -330,11 +346,14 @@ export class ShantenCalculator {
     const calc = (hasPair: boolean) => {
       const z = [0, 0, 0];
       const zt = TYPE.Z;
-      for (let n = 1; n < this.hand.getArrayLen(zt); n++) {
-        if (this.hand.get(zt, n) >= 3) z[0]++;
-        else if (this.hand.get(zt, n) == 2) z[1]++;
-        else if (this.hand.get(zt, n) == 1) z[2]++;
-      }
+      this.hand.forEach(
+        (_, n) => {
+          if (this.hand.get(zt, n) >= 3) z[0]++;
+          else if (this.hand.get(zt, n) == 2) z[1]++;
+          else if (this.hand.get(zt, n) == 1) z[2]++;
+        },
+        { filterBy: [zt] }
+      );
 
       const b = [0, 0, 0];
       const bn = this.hand.get(TYPE.BACK, 0);
@@ -368,18 +387,16 @@ export class ShantenCalculator {
     let min = calc(false);
 
     // case has pairs
-    for (let t of Object.values(TYPE)) {
-      for (let n = 1; n < this.hand.getArrayLen(t); n++) {
-        if (this.hand.get(t, n) >= 2) {
-          const tiles = this.hand.dec([new Tile(t, n), new Tile(t, n)]);
-          const r = calc(true);
-          this.hand.inc(tiles);
-          if (r < min) {
-            min = r;
-          }
+    this.hand.forEach((t, n) => {
+      if (this.hand.get(t, n) >= 2) {
+        const tiles = this.hand.dec([new Tile(t, n), new Tile(t, n)]);
+        const r = calc(true);
+        this.hand.inc(tiles);
+        if (r < min) {
+          min = r;
         }
       }
-    }
+    });
     return min;
   }
   private commonByType(
@@ -454,18 +471,22 @@ export class ShantenCalculator {
     let nSerialPairs = 0;
     let nIsolated = 0;
     let nTiles = 0;
-    for (let n = 1; n < this.hand.getArrayLen(t); n++) {
-      nTiles += this.hand.get(t, n);
-      if (
-        n <= 7 &&
-        this.hand.get(t, n + 1) == 0 &&
-        this.hand.get(t, n + 2) == 0
-      ) {
-        nSerialPairs += nTiles >> 1;
-        nIsolated += nTiles % 2;
-        nTiles = 0;
-      }
-    }
+
+    this.hand.forEach(
+      (t, n) => {
+        nTiles += this.hand.get(t, n);
+        if (
+          n <= 7 &&
+          this.hand.get(t, n + 1) == 0 &&
+          this.hand.get(t, n + 2) == 0
+        ) {
+          nSerialPairs += nTiles >> 1;
+          nIsolated += nTiles % 2;
+          nTiles = 0;
+        }
+      },
+      { filterBy: [t] }
+    );
 
     nSerialPairs += nTiles >> 1;
     nIsolated += nTiles % 2;
@@ -571,9 +592,9 @@ export class BlockCalculator {
     for (let t of Object.values(TYPE)) {
       if (t == TYPE.BACK) continue;
       for (let n = 1; n < this.hand.getArrayLen(t); n++) {
-        const v = this.hand.get(t, n);
-        if (v == 2) ret.push(new BlockPair(new Tile(t, n), new Tile(t, n)));
-        else if (v == 0) continue;
+        const count = this.hand.get(t, n);
+        if (count == 2) ret.push(new BlockPair(new Tile(t, n), new Tile(t, n)));
+        else if (count == 0) continue;
         else return [];
       }
     }
@@ -624,24 +645,22 @@ export class BlockCalculator {
 
   fourSetsOnePair(): readonly Block[][] {
     let ret: Block[][] = [];
-    for (let t of Object.values(TYPE)) {
-      for (let n = 1; n < this.hand.getArrayLen(t); n++) {
-        if (this.hand.get(t, n) >= 2) {
-          const tiles = this.hand.dec([new Tile(t, n), new Tile(t, n)]);
-          // 1. calc all cases without two pairs
-          // 2. remove non five blocks
-          // 3. add two pairs to the head
-          const v = this.commonAll()
-            .filter((arr) => arr.length == 4)
-            .map((arr) => {
-              arr.unshift(new BlockPair(tiles[0], tiles[1]));
-              return arr;
-            });
-          ret = [...ret, ...v];
-          this.hand.inc(tiles);
-        }
+    this.hand.forEach((t, n) => {
+      if (this.hand.get(t, n) >= 2) {
+        const tiles = this.hand.dec([new Tile(t, n), new Tile(t, n)]);
+        // 1. calc all cases without two pairs
+        // 2. remove non five blocks
+        // 3. add two pairs to the head
+        const v = this.commonAll()
+          .filter((arr) => arr.length == 4)
+          .map((arr) => {
+            arr.unshift(new BlockPair(tiles[0], tiles[1]));
+            return arr;
+          });
+        ret = [...ret, ...v];
+        this.hand.inc(tiles);
       }
-    }
+    });
     return ret;
   }
 

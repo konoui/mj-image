@@ -72,10 +72,9 @@ export class Efficiency {
     let candidates: Tile[] = [];
 
     const sc = new ShantenCalculator(hand);
-    for (let t of Object.values(TYPE)) {
-      if (t == TYPE.BACK) continue;
-      for (let n = 1; n < hand.getArrayLen(t); n++) {
-        if (hand.get(t, n) >= 4) continue;
+    hand.forEach(
+      (t, n) => {
+        if (hand.get(t, n) >= 4) return;
         const tile = new Tile(t, n);
         const tiles = hand.inc([tile]);
         const s = !options?.fourSetsOnePair ? sc.calc() : sc.fourSetsOnePair();
@@ -85,8 +84,9 @@ export class Efficiency {
           r = s;
           candidates = [tile];
         } else if (s == r) candidates.push(tile);
-      }
-    }
+      },
+      { skipBack: true }
+    );
     return {
       shanten: r,
       candidates: candidates,
