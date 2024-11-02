@@ -1,6 +1,6 @@
 import { OPERATOR, Tile, TYPE } from "../core";
 import { assert } from "../myassert";
-import { Hand, ShantenCalculator } from "./calc";
+import { Hand, ShantenCalculator, forHand } from "./calc";
 
 export interface SerializedCandidate {
   tile: string;
@@ -72,21 +72,18 @@ export class Efficiency {
     let candidates: Tile[] = [];
 
     const sc = new ShantenCalculator(hand);
-    hand.forEach(
-      (t, n) => {
-        if (hand.get(t, n) >= 4) return;
-        const tile = new Tile(t, n);
-        const tiles = hand.inc([tile]);
-        const s = !options?.fourSetsOnePair ? sc.calc() : sc.fourSetsOnePair();
-        hand.dec(tiles);
+    for (const [t, n] of forHand({ skipBack: true })) {
+      if (hand.get(t, n) >= 4) continue;
+      const tile = new Tile(t, n);
+      const tiles = hand.inc([tile]);
+      const s = !options?.fourSetsOnePair ? sc.calc() : sc.fourSetsOnePair();
+      hand.dec(tiles);
 
-        if (s < r) {
-          r = s;
-          candidates = [tile];
-        } else if (s == r) candidates.push(tile);
-      },
-      { skipBack: true }
-    );
+      if (s < r) {
+        r = s;
+        candidates = [tile];
+      } else if (s == r) candidates.push(tile);
+    }
     return {
       shanten: r,
       candidates: candidates,

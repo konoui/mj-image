@@ -52,6 +52,18 @@ export interface HandData {
   reached: boolean;
 }
 
+export function* forHand(options?: { skipBack?: boolean; filterBy?: Type[] }) {
+  const types = options?.filterBy ? options?.filterBy : Object.values(TYPE);
+  for (let t of types) {
+    if (options?.skipBack && t == TYPE.BACK) continue;
+    // Note: the value is related to data length of hand(data[type].length -1)
+    const upper = t == TYPE.Z ? 7 : t == TYPE.BACK ? 1 : 9;
+    for (let n = 1; n <= upper; n++) {
+      yield [t, n] as const;
+    }
+  }
+}
+
 export class Hand {
   protected data: HandData;
   constructor(input: string, allowBackBlock = false) {
@@ -91,27 +103,9 @@ export class Hand {
       throw new Error(`unexpected block ${b.type} ${b.toString()}`);
     }
   }
-  forEach(
-    fn: (type: Type, n: number) => void,
-    options?: {
-      filterBy?: Type[];
-      excludes?: Type[];
-      skipBack?: boolean;
-    }
-  ) {
-    for (let t of Object.values(TYPE)) {
-      if (options?.skipBack && t == TYPE.BACK) continue;
-      if (options?.filterBy != null && !options.filterBy.some((v) => v == t))
-        continue;
-      if (options?.excludes?.includes(t)) continue;
-      for (let n = 1; n < this.getArrayLen(t); n++) {
-        fn(t, n);
-      }
-    }
-  }
   get hands() {
     const tiles: Tile[] = [];
-    this.forEach((t, n) => {
+    for (const [t, n] of forHand()) {
       let count = this.get(t, n);
       if (t != TYPE.Z && n == 5 && this.get(t, 0) > 0) {
         count -= this.get(t, 0); // for red
@@ -120,7 +114,7 @@ export class Hand {
       for (let i = 0; i < count; i++) {
         tiles.push(new Tile(t, n));
       }
-    });
+    }
     if (this.drawn != null) {
       const drawn = this.drawn;
       const idx = tiles.findIndex((t) => t.equals(drawn));
@@ -159,12 +153,9 @@ export class Hand {
   get menzen() {
     return !this.called.some((v) => !(v instanceof BlockAnKan));
   }
-  getArrayLen(t: Type) {
-    return this.data[t].length;
-  }
-  sum(t: Type) {
+  sum(type: Type) {
     let sum = 0;
-    for (let n = 1; n < this.getArrayLen(t); n++) sum += this.get(t, n);
+    for (const [t, n] of forHand({ filterBy: [type] })) sum += this.get(t, n);
     return sum;
   }
   get(t: Type, n: number) {
@@ -314,13 +305,10 @@ export class ShantenCalculator {
     if (this.hand.called.length > 0) return Infinity;
     let nPairs = 0;
     let nIsolated = 0;
-    this.hand.forEach(
-      (t, n) => {
-        if (this.hand.get(t, n) == 2) nPairs++;
-        if (this.hand.get(t, n) == 1) nIsolated++;
-      },
-      { skipBack: true }
-    );
+    for (const [t, n] of forHand({ skipBack: true })) {
+      if (this.hand.get(t, n) == 2) nPairs++;
+      if (this.hand.get(t, n) == 1) nIsolated++;
+    }
 
     if (nPairs > 7) nPairs = 7;
     if (nPairs + nIsolated >= 7) nIsolated = 7 - nPairs;
@@ -345,15 +333,11 @@ export class ShantenCalculator {
   fourSetsOnePair() {
     const calc = (hasPair: boolean) => {
       const z = [0, 0, 0];
-      const zt = TYPE.Z;
-      this.hand.forEach(
-        (_, n) => {
-          if (this.hand.get(zt, n) >= 3) z[0]++;
-          else if (this.hand.get(zt, n) == 2) z[1]++;
-          else if (this.hand.get(zt, n) == 1) z[2]++;
-        },
-        { filterBy: [zt] }
-      );
+      for (const [t, n] of forHand({ filterBy: [TYPE.Z] })) {
+        if (this.hand.get(t, n) >= 3) z[0]++;
+        else if (this.hand.get(t, n) == 2) z[1]++;
+        else if (this.hand.get(t, n) == 1) z[2]++;
+      }
 
       const b = [0, 0, 0];
       const bn = this.hand.get(TYPE.BACK, 0);
@@ -387,7 +371,7 @@ export class ShantenCalculator {
     let min = calc(false);
 
     // case has pairs
-    this.hand.forEach((t, n) => {
+    for (const [t, n] of forHand()) {
       if (this.hand.get(t, n) >= 2) {
         const tiles = this.hand.dec([new Tile(t, n), new Tile(t, n)]);
         const r = calc(true);
@@ -396,7 +380,7 @@ export class ShantenCalculator {
           min = r;
         }
       }
-    });
+    }
     return min;
   }
   private commonByType(
@@ -464,7 +448,7 @@ export class ShantenCalculator {
     }
     return max;
   }
-  private groupRemainingTiles(t: Type): {
+  private groupRemainingTiles(type: Type): {
     patternA: [number, number, number];
     patternB: [number, number, number];
   } {
@@ -472,21 +456,18 @@ export class ShantenCalculator {
     let nIsolated = 0;
     let nTiles = 0;
 
-    this.hand.forEach(
-      (t, n) => {
-        nTiles += this.hand.get(t, n);
-        if (
-          n <= 7 &&
-          this.hand.get(t, n + 1) == 0 &&
-          this.hand.get(t, n + 2) == 0
-        ) {
-          nSerialPairs += nTiles >> 1;
-          nIsolated += nTiles % 2;
-          nTiles = 0;
-        }
-      },
-      { filterBy: [t] }
-    );
+    for (const [t, n] of forHand({ filterBy: [type] })) {
+      nTiles += this.hand.get(t, n);
+      if (
+        n <= 7 &&
+        this.hand.get(t, n + 1) == 0 &&
+        this.hand.get(t, n + 2) == 0
+      ) {
+        nSerialPairs += nTiles >> 1;
+        nIsolated += nTiles % 2;
+        nTiles = 0;
+      }
+    }
 
     nSerialPairs += nTiles >> 1;
     nIsolated += nTiles % 2;
@@ -589,15 +570,13 @@ export class BlockCalculator {
   sevenPairs(): readonly Block[][] {
     if (this.hand.called.length > 0) return [];
     const ret: Block[] = [];
-    for (let t of Object.values(TYPE)) {
-      if (t == TYPE.BACK) continue;
-      for (let n = 1; n < this.hand.getArrayLen(t); n++) {
-        const count = this.hand.get(t, n);
-        if (count == 2) ret.push(new BlockPair(new Tile(t, n), new Tile(t, n)));
-        else if (count == 0) continue;
-        else return [];
-      }
+    for (const [t, n] of forHand({ skipBack: true })) {
+      const count = this.hand.get(t, n);
+      if (count == 2) ret.push(new BlockPair(new Tile(t, n), new Tile(t, n)));
+      else if (count == 0) continue;
+      else return [];
     }
+
     return [ret];
   }
 
@@ -645,7 +624,7 @@ export class BlockCalculator {
 
   fourSetsOnePair(): readonly Block[][] {
     let ret: Block[][] = [];
-    this.hand.forEach((t, n) => {
+    for (const [t, n] of forHand()) {
       if (this.hand.get(t, n) >= 2) {
         const tiles = this.hand.dec([new Tile(t, n), new Tile(t, n)]);
         // 1. calc all cases without two pairs
@@ -660,15 +639,15 @@ export class BlockCalculator {
         ret = [...ret, ...v];
         this.hand.inc(tiles);
       }
-    });
+    }
+
     return ret;
   }
 
   private commonAll(): readonly Block[][] {
     const handleZ = (): readonly Block[][] => {
       const z: Block[] = [];
-      const zt = TYPE.Z;
-      for (let n = 1; n < this.hand.getArrayLen(zt); n++) {
+      for (const [zt, n] of forHand({ filterBy: [TYPE.Z] })) {
         if (this.hand.get(zt, n) == 0) continue;
         else if (this.hand.get(zt, n) != 3) return [];
         z.push(

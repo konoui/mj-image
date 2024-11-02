@@ -24,6 +24,7 @@ import {
   NZ,
   N19,
   SerializedWinResult,
+  forHand,
 } from "../calculator";
 import {
   BlockAnKan,
@@ -673,14 +674,12 @@ export class Controller {
     const hand = this.hand(w);
     const blocks: BlockAnKan[] = [];
     if (hand.reached) return false; // FIXME 待ち変更がなければできる
-    for (let t of Object.values(TYPE)) {
-      for (let n = 1; n < hand.getArrayLen(t); n++) {
-        if (hand.get(t, n) == 4) {
-          const tile = new Tile(t, n);
-          const tiles = [tile, tile, tile, tile];
-          if (isNum5(tile)) tiles[1] = tile.clone({ add: OPERATOR.RED });
-          blocks.push(new BlockAnKan(tiles));
-        }
+    for (let [t, n] of forHand()) {
+      if (hand.get(t, n) == 4) {
+        const tile = new Tile(t, n);
+        const tiles = [tile, tile, tile, tile];
+        if (isNum5(tile)) tiles[1] = tile.clone({ add: OPERATOR.RED });
+        blocks.push(new BlockAnKan(tiles));
       }
     }
     if (blocks.length == 0) return false;
