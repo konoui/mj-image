@@ -94,5 +94,6 @@ export const ROUND_MAP = {
   [ROUND.N4]: "北４局",
 } as const;
 
+export type Type = (typeof TYPE)[keyof typeof TYPE];
 export type Wind = (typeof WIND)[keyof typeof WIND];
 export type Round = (typeof ROUND)[keyof typeof ROUND];

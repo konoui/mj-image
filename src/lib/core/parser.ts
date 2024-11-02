@@ -1,5 +1,5 @@
 import { Lexer } from "./lexer";
-import { BLOCK, OPERATOR, TYPE, INPUT_SEPARATOR, TILE_CONTEXT } from "./";
+import { BLOCK, OPERATOR, TYPE, INPUT_SEPARATOR, Type } from "./";
 
 type Separator = typeof INPUT_SEPARATOR;
 
@@ -51,8 +51,6 @@ export const sortCalledTiles = (arr: readonly Tile[]) => {
   });
   return sorted;
 };
-
-export type Type = (typeof TYPE)[keyof typeof TYPE];
 
 export function isNum5(t: Tile) {
   return t.isNum() && t.n == 5;

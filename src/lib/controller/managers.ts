@@ -1,4 +1,3 @@
-import { assert } from "../myassert";
 import {
   Wind,
   Round,
@@ -9,8 +8,8 @@ import {
   ROUND,
 } from "../core/";
 import { TupleOfSize } from "../calculator";
-import { Type, Tile } from "../core/parser";
-import { nextWind, nextRound } from "../core";
+import { Tile } from "../core/parser";
+import { nextWind, nextRound, Type } from "../core";
 export class ScoreManager {
   private reachValue = 1000;
   private m: { [key: string]: number };
@@ -107,14 +106,11 @@ export class Counter {
     [TYPE.S]: TupleOfSize<number, 10>;
     [TYPE.P]: TupleOfSize<number, 10>;
     [TYPE.Z]: TupleOfSize<number, 8>;
-  } = {
-    [TYPE.M]: [1, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-    [TYPE.S]: [1, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-    [TYPE.P]: [1, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-    [TYPE.Z]: [0, 4, 4, 4, 4, 4, 4, 4],
   };
   safeMap = createWindMap({} as { [name: string]: boolean }, true);
-  constructor(public disable = false) {}
+  constructor(public disable = false) {
+    this.c = this.initial();
+  }
   get(t: Tile) {
     if (t.t == TYPE.BACK) return 0;
     return this.c[t.t][t.n];
@@ -144,7 +140,15 @@ export class Counter {
   }
 
   reset() {
-    this.c = {
+    this.c = this.initial();
+  }
+  private initial(): {
+    [TYPE.M]: TupleOfSize<number, 10>;
+    [TYPE.S]: TupleOfSize<number, 10>;
+    [TYPE.P]: TupleOfSize<number, 10>;
+    [TYPE.Z]: TupleOfSize<number, 8>;
+  } {
+    return {
       [TYPE.M]: [1, 4, 4, 4, 4, 4, 4, 4, 4, 4],
       [TYPE.S]: [1, 4, 4, 4, 4, 4, 4, 4, 4, 4],
       [TYPE.P]: [1, 4, 4, 4, 4, 4, 4, 4, 4, 4],

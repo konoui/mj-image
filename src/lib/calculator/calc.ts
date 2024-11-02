@@ -5,6 +5,7 @@ import {
   Round,
   Wind,
   WIND,
+  Type,
   createWindMap,
   INPUT_SEPARATOR,
 } from "../core";
@@ -16,7 +17,6 @@ import {
   BlockShoKan,
   BlockAnKan,
   BlockDaiKan,
-  Type,
   BlockPair,
   Block,
   BlockIsolated,
@@ -344,7 +344,7 @@ export class ShantenCalculator {
       const bb = bn % 3;
       b[0] = Math.floor(bn / 3);
       if (bb == 2) b[1] = 1;
-      if (bb == 1) b[2] = 1;
+      else if (bb == 1) b[2] = 1;
 
       let min = 13;
       const mr = this.commonByType(TYPE.M);
@@ -1084,12 +1084,12 @@ export class DoubleCalculator {
   }
   dX1(h: readonly Block[]) {
     let dcount = 0;
-    let rcount = 0;
     let bcount = 0;
+    let rcount = 0;
     for (let b of h) {
-      for (let t of b.tiles) {
-        for (let d of this.cfg.doras) if (t.equals(d)) dcount++;
-        for (let d of this.cfg.blindDoras) if (t.equals(d)) bcount++;
+      for (const t of b.tiles) {
+        for (const d of this.cfg.doras) if (t.equals(d)) dcount++;
+        for (const d of this.cfg.blindDoras) if (t.equals(d)) bcount++;
         if (t.has(OPERATOR.RED)) rcount++;
       }
     }
