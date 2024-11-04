@@ -66,7 +66,7 @@ export function* forHand(options?: { skipBack?: boolean; filterBy?: Type[] }) {
 
 export class Hand {
   protected data: HandData;
-  constructor(input: string, allowBackBlock = false) {
+  constructor(input: string | Block[], allowBackBlock = false) {
     this.data = {
       [TYPE.M]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       [TYPE.P]: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
