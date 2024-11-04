@@ -79,8 +79,8 @@ export class Hand {
     };
     this.init(input, allowBackBlock);
   }
-  private init(input: string, allowBackBlock: boolean) {
-    const blocks = new Parser(input).parse();
+  private init(input: string | Block[], allowBackBlock: boolean) {
+    const blocks = Array.isArray(input) ? input : new Parser(input).parse();
     for (let b of blocks) {
       if (b.isCalled()) {
         this.data.called = [...this.called, b];
@@ -93,7 +93,10 @@ export class Hand {
       } else if (b.is(BLOCK.HAND)) {
         this.inc(b.tiles);
         continue;
-      } else if (input.split("").every((v) => v === TYPE.BACK)) {
+      } else if (
+        !Array.isArray(input) &&
+        input.split("").every((v) => v === TYPE.BACK)
+      ) {
         this.inc(b.tiles);
         continue;
       } else if (allowBackBlock) {
