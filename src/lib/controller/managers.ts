@@ -14,7 +14,7 @@ export class ScoreManager {
   private reachValue = 1000;
   private m: { [key: string]: number };
   constructor(initial: { [key: string]: number }) {
-    this.m = initial;
+    this.m = structuredClone(initial);
   }
   get summary() {
     return structuredClone(this.m);
@@ -22,15 +22,7 @@ export class ScoreManager {
   reach(id: string) {
     this.m[id] -= this.reachValue;
   }
-  update(
-    result: {
-      [WIND.E]: number;
-      [WIND.S]: number;
-      [WIND.W]: number;
-      [WIND.N]: number;
-    },
-    windMap: { [key: string]: Wind }
-  ) {
+  update(result: { [w in Wind]: number }, windMap: { [key: string]: Wind }) {
     for (let id in windMap) {
       const w = windMap[id];
       const point = result[w];
@@ -49,8 +41,8 @@ export class PlaceManager {
     params?: { round: Round; sticks: { reach: number; dead: number } }
   ) {
     this.round = params?.round ?? ROUND.E1;
-    this.sticks = params?.sticks ?? { reach: 0, dead: 0 };
-    this.pToW = initial;
+    this.sticks = structuredClone(params?.sticks) ?? { reach: 0, dead: 0 };
+    this.pToW = structuredClone(initial);
     for (let playerID in this.pToW) this.wToP[this.pToW[playerID]] = playerID;
   }
 

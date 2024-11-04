@@ -10,6 +10,7 @@ import {
   createWindMap,
   callBlockIndex,
   BLOCK,
+  prevWind,
 } from "../core/";
 import {
   BoardContext,
@@ -380,7 +381,7 @@ export class Controller {
     c.playerIDs = playerIDs;
     c.mailBox = events;
     c.observer.placeManager = new PlaceManager(h.players, {
-      round: structuredClone(h.round),
+      round: h.round,
       sticks: structuredClone(h.sticks),
     });
     c.observer.scoreManager = new ScoreManager(h.scores);
@@ -836,7 +837,7 @@ export abstract class BaseActor {
 
         this.setHands(e);
         this.placeManager = new PlaceManager(structuredClone(e.places), {
-          round: structuredClone(e.round),
+          round: e.round,
           sticks: structuredClone(e.sticks),
         });
         this.scoreManager = new ScoreManager(structuredClone(e.scores));
@@ -1036,8 +1037,9 @@ export class Observer extends BaseActor {
         break;
       case "END_GAME":
         for (let w of Object.values(WIND)) {
+          // Note: show prev wind as wind of player is updated by BaseActor handler
           console.debug(
-            `${this.placeManager.playerID(w)}(${w})`,
+            `${this.placeManager.playerID(w)}(${prevWind(w)})`,
             `end hand: ${this.hand(w).toString()}`
           );
         }
