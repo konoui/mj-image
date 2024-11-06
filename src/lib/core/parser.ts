@@ -466,7 +466,7 @@ export class Parser {
   tileSeparators(): readonly (Tile | Separator)[] {
     const l = new Lexer(this.input);
     const res: (Tile | Separator)[] = [];
-    let cluster: Tile[] = [];
+    let cluster: { n: number; ops?: Operator[] }[] = [];
 
     this.validate(this.input);
     for (;;) {
@@ -615,7 +615,10 @@ function areConsecutiveTiles(rtiles: readonly Tile[]): boolean {
   return true;
 }
 
-function makeTiles(cluster: readonly Tile[], k: Type): readonly Tile[] {
+function makeTiles(
+  cluster: readonly { n: number; ops?: Operator[] }[],
+  k: Type
+): readonly Tile[] {
   return cluster.map((v) => {
     const tile = new Tile(k, v.n, v.ops);
     // convert 0 alias to red operator
@@ -625,7 +628,10 @@ function makeTiles(cluster: readonly Tile[], k: Type): readonly Tile[] {
   });
 }
 
-function isTypeAlias(s: string, cluster: Tile[]): [Type, boolean] {
+function isTypeAlias(
+  s: string,
+  cluster: { n: number; ops?: Operator[] }[]
+): [Type, boolean] {
   const [k, ok] = isType(s);
   if (ok) return [k, true];
 
@@ -634,7 +640,7 @@ function isTypeAlias(s: string, cluster: Tile[]): [Type, boolean] {
     for (let i = 0; i < cluster.length; i++) {
       const t = cluster[i];
       if (s === "d") {
-        cluster[i] = t.clone({ n: t.n + 4 });
+        cluster[i].n = t.n + 4;
       }
     }
     return [TYPE.Z, true];
@@ -649,7 +655,7 @@ function isNumber(v: string): [number, boolean] {
 }
 
 // isOperator will consume char if the next is an operator
-function isOperator(l: Lexer): [Tile, boolean] {
+function isOperator(l: Lexer): [{ n: number; ops?: Operator[] }, boolean] {
   const ops = Object.values(OPERATOR) as string[];
   if (!ops.includes(l.char)) return [new Tile(TYPE.BACK, 0), false];
 

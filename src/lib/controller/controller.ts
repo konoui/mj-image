@@ -503,10 +503,9 @@ export class Controller {
       block = base.clone({
         replace: {
           idx: idx,
-          tile: new Tile(sample.t, sample.n, [
-            OPERATOR.RED,
-            OPERATOR.HORIZONTAL,
-          ]),
+          tile: sample.clone({
+            add: [OPERATOR.RED, OPERATOR.HORIZONTAL],
+          }),
         },
       });
     // if hand has red
@@ -538,8 +537,11 @@ export class Controller {
     if (hand.hands.length < 3) return false;
 
     let called = t.has(OPERATOR.RED)
-      ? new Tile(t.t, t.n, [OPERATOR.HORIZONTAL, OPERATOR.RED])
-      : t.clone({ removeAll: true, add: OPERATOR.HORIZONTAL });
+      ? t.clone({
+          remove: OPERATOR.TSUMO,
+          add: [OPERATOR.HORIZONTAL, OPERATOR.RED],
+        })
+      : t.clone({ remove: OPERATOR.TSUMO, add: OPERATOR.HORIZONTAL });
 
     const blocks: BlockChi[] = [];
     const left =
@@ -738,10 +740,7 @@ export class Controller {
       block = block.clone({
         replace: {
           idx: idx,
-          tile: new Tile(sample.t, sample.n, [
-            OPERATOR.HORIZONTAL,
-            OPERATOR.RED,
-          ]),
+          tile: sample.clone({ add: [OPERATOR.HORIZONTAL, OPERATOR.RED] }),
         },
       });
     }
