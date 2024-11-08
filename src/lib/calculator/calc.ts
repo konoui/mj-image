@@ -200,6 +200,7 @@ export class Hand {
           `unable to decrease ${t.toString()} in ${this.toString()}`
         );
       }
+
       backup.push(t);
 
       if (t.t == TYPE.BACK) this.data[t.t][1] -= 1;
@@ -208,7 +209,7 @@ export class Hand {
         if (t.has(OPERATOR.RED)) this.data[t.t][0] -= 1;
       }
 
-      // TODO commonByType does not add red op for dec
+      // r5 ではなく 5 で減算される際に最後の牌が red であれば red を 0 にする。
       if (isNum5(t) && this.get(t.t, 5) == 0 && this.get(t.t, 0) > 0) {
         this.data[t.t][0] = 0;
         const c = backup.pop()!.clone({ add: OPERATOR.RED });
@@ -575,8 +576,13 @@ export class BlockCalculator {
     const ret: Block[] = [];
     for (const [t, n] of forHand({ skipBack: true })) {
       const count = this.hand.get(t, n);
-      if (count == 2) ret.push(new BlockPair(new Tile(t, n), new Tile(t, n)));
-      else if (count == 0) continue;
+      if (count == 2) {
+        const s = new Tile(t, n);
+        // red に対応するため dec した tile を使用する
+        const tiles = this.hand.dec([s, s]);
+        ret.push(new BlockPair(tiles[0], tiles[1]));
+        this.hand.inc(tiles);
+      } else if (count == 0) continue;
       else return [];
     }
 
@@ -602,8 +608,8 @@ export class BlockCalculator {
   }
 
   nineGates(): readonly Block[][] {
-    const cond = (t: Type, n: number, want: number[]) =>
-      want.includes(this.hand.get(t, n));
+    const cond = (t: Type, n: number, wantCount: number[]) =>
+      wantCount.includes(this.hand.get(t, n));
     for (let t of Object.values(TYPE)) {
       if (t == TYPE.BACK) continue;
       if (t == TYPE.Z) continue;

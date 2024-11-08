@@ -268,6 +268,18 @@ describe("Block Calculator", () => {
       want: [["22m", "123m", "123p", "123s", "111z"]],
       handler: "Common",
     },
+    {
+      name: "common with red",
+      input: "123m123pr555s111z22m",
+      want: [["22m", "123m", "123p", "r555s", "111z"]],
+      handler: "Common",
+    },
+    {
+      name: "seven with red",
+      input: "11s33sr55s66s88s11z22z",
+      want: [["11s", "33s", "r55s", "66s", "88s", "11z", "22z"]],
+      handler: "Seven",
+    },
   ];
 
   for (const tt of tests) {
