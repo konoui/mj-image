@@ -207,6 +207,7 @@ describe("controller", () => {
       sum[c.placeManager.playerID("2w")],
     ]).toStrictEqual([25000 + 11600, 25000 - 11600]);
   });
+  test("リーチ後、自分が捨てた牌でロンできない", () => {});
 });
 
 describe("callable", () => {

@@ -458,7 +458,7 @@ export class Controller {
       env.ronWind = params.discardedBy;
       env.finalDiscardWin = !this.wall.canDraw;
       env.quadWin = params.quadWin;
-      hand.inc([t]); // TODO hand.draw looks good but it adds OP.TSUMO
+      hand.inc([t]);
     } else {
       env.finalWallWin = !this.wall.canDraw;
       env.replacementWin = params?.replacementWin;
@@ -475,8 +475,8 @@ export class Controller {
     // case ron フリテン対応
     if (hand.draw == null) {
       const c = Efficiency.candidateTiles(this.hand(w)).candidates;
-      const tiles = this.river.discards(w).map((v) => v.t);
-      if (tiles.some((t) => c.some((ct) => ct.equals(t)))) return false;
+      if (this.river.discards(w).some((v) => c.some((ct) => ct.equals(v.t))))
+        return false;
     }
     return ret;
   }
@@ -676,6 +676,7 @@ export class Controller {
   doAnKan(w: Wind): BlockAnKan[] | false {
     const hand = this.hand(w);
     const blocks: BlockAnKan[] = [];
+    // TODO ハイテイ ではカンできない
     if (hand.reached) return false; // FIXME 待ち変更がなければできる
     for (let [t, n] of forHand()) {
       if (hand.get(t, n) == 4) {
@@ -696,6 +697,7 @@ export class Controller {
   doShoKan(w: Wind): BlockShoKan[] | false {
     const hand = this.hand(w);
     if (hand.reached) return false;
+    // TODO ハイテイ ではカンできない
     const called = hand.called.filter((b) => b instanceof BlockPon);
     if (called.length == 0) return false;
     const blocks: BlockShoKan[] = [];
