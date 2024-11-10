@@ -351,9 +351,9 @@ export class ShantenCalculator {
       else if (bb == 1) b[2] = 1;
 
       let min = 13;
-      const mr = this.commonByType(TYPE.M);
-      const pr = this.commonByType(TYPE.P);
-      const sr = this.commonByType(TYPE.S);
+      const mr = this.patternByNumType(TYPE.M);
+      const pr = this.patternByNumType(TYPE.P);
+      const sr = this.patternByNumType(TYPE.S);
       for (let m of [mr.patternA, mr.patternB]) {
         for (let p of [pr.patternA, pr.patternB]) {
           for (let s of [sr.patternA, sr.patternB]) {
@@ -387,18 +387,16 @@ export class ShantenCalculator {
     }
     return min;
   }
-  private commonByType(
-    t: Type,
+  private patternByNumType(
+    t: typeof TYPE.M | typeof TYPE.S | typeof TYPE.P,
     n = 1
   ): {
     patternA: [number, number, number];
     patternB: [number, number, number];
   } {
-    if (t == TYPE.BACK || t == TYPE.Z)
-      throw new Error(`expect number type but ${t}`);
     if (n > 9) return this.groupRemainingTiles(t);
 
-    let max = this.commonByType(t, n + 1);
+    let max = this.patternByNumType(t, n + 1);
 
     if (
       n <= 7 &&
@@ -411,7 +409,7 @@ export class ShantenCalculator {
         new Tile(t, n + 1),
         new Tile(t, n + 2),
       ]);
-      const r = this.commonByType(t, n);
+      const r = this.patternByNumType(t, n);
       this.hand.inc(tiles);
       r.patternA[0]++, r.patternB[0]++;
       if (
@@ -434,7 +432,7 @@ export class ShantenCalculator {
         new Tile(t, n),
         new Tile(t, n),
       ]);
-      const r = this.commonByType(t, n);
+      const r = this.patternByNumType(t, n);
       this.hand.inc(tiles);
       r.patternA[0]++, r.patternB[0]++;
       if (
@@ -528,9 +526,7 @@ export class BlockCalculator {
   markDrawn(hands: readonly Block[][], lastTile: Tile): readonly Block[][] {
     if (hands.length == 0) return [];
     const op =
-      this.hand.drawn != null
-        ? OPERATOR.TSUMO
-        : lastTile.has(OPERATOR.TSUMO)
+      this.hand.drawn != null || lastTile.has(OPERATOR.TSUMO)
         ? OPERATOR.TSUMO
         : OPERATOR.RON;
 
@@ -639,7 +635,7 @@ export class BlockCalculator {
         // 1. calc all cases without two pairs
         // 2. remove non five blocks
         // 3. add two pairs to the head
-        const v = this.commonAll()
+        const v = this.patternAll()
           .filter((arr) => arr.length == 4)
           .map((arr) => {
             arr.unshift(new BlockPair(tiles[0], tiles[1]));
@@ -653,7 +649,7 @@ export class BlockCalculator {
     return ret;
   }
 
-  private commonAll(): readonly Block[][] {
+  private patternAll(): readonly Block[][] {
     const handleZ = (): readonly Block[][] => {
       const z: Block[] = [];
       for (const [zt, n] of forHand({ filterBy: [TYPE.Z] })) {
@@ -686,9 +682,9 @@ export class BlockCalculator {
     // [["123s", "123s"]]
     // result: [["123m", "123m", "123s", "123s"], ["111m", "333m", "123s", "123s"]]
     const vvv = [
-      this.commonByType(TYPE.M),
-      this.commonByType(TYPE.P),
-      this.commonByType(TYPE.S),
+      this.handleNumType(TYPE.M),
+      this.handleNumType(TYPE.P),
+      this.handleNumType(TYPE.S),
       handleZ(),
       handleBack(),
       [this.hand.called.concat()],
@@ -704,10 +700,13 @@ export class BlockCalculator {
     return ret;
   }
 
-  private commonByType(t: Type, n: number = 1): readonly Block[][] {
+  private handleNumType(
+    t: typeof TYPE.M | typeof TYPE.P | typeof TYPE.S,
+    n: number = 1
+  ): readonly Block[][] {
     if (n > 9) return [];
 
-    if (this.hand.get(t, n) == 0) return this.commonByType(t, n + 1);
+    if (this.hand.get(t, n) == 0) return this.handleNumType(t, n + 1);
 
     const ret: Block[][] = [];
     if (
@@ -721,7 +720,7 @@ export class BlockCalculator {
         new Tile(t, n + 1),
         new Tile(t, n + 2),
       ]);
-      let nested = this.commonByType(t, n);
+      let nested = this.handleNumType(t, n);
       this.hand.inc(tiles);
       if (nested.length == 0) nested = [[]];
       for (let arr of nested) {
@@ -736,7 +735,7 @@ export class BlockCalculator {
         new Tile(t, n),
         new Tile(t, n),
       ]);
-      let nested = this.commonByType(t, n);
+      let nested = this.handleNumType(t, n);
       this.hand.inc(tiles);
       if (nested.length == 0) nested = [[]];
       for (let arr of nested) {
@@ -844,7 +843,7 @@ export class DoubleCalculator {
     };
   }
 
-  calc(hands: readonly Block[][]): WinResult | false {
+  calc(...hands: readonly Block[][]): WinResult | false {
     const patterns = this.calcPatterns(hands);
     if (patterns.length == 0) return false;
     let max = [0, 0]; // [yayu, fu]
@@ -859,12 +858,10 @@ export class DoubleCalculator {
       );
       if (sum > max[0]) {
         idx = i;
-        max[0] = sum;
-        max[1] = pt.fu;
+        max = [sum, pt.fu];
       } else if (sum == max[0] && pt.fu > max[1]) {
         idx = i;
-        max[0] = sum;
-        max[1] = pt.fu;
+        max = [sum, pt.fu];
       }
     }
 
@@ -1238,8 +1235,8 @@ export class DoubleCalculator {
       if (tile.t == TYPE.Z) continue;
       if (!(block instanceof BlockRun || block instanceof BlockChi)) continue;
       if (tile.n == 1) m[tile.t][0]++;
-      if (tile.n == 4) m[tile.t][1]++;
-      if (tile.n == 7) m[tile.t][2]++;
+      else if (tile.n == 4) m[tile.t][1]++;
+      else if (tile.n == 7) m[tile.t][2]++;
     }
 
     for (let v of Object.values(m)) {

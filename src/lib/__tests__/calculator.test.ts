@@ -312,7 +312,7 @@ test("calc with drawn", () => {
 test("commonByKind", () => {
   const h = new Hand("111222333456m");
   const c = new BlockCalculator(h);
-  const got = (c as any).commonByType(TYPE.M) as Block[][];
+  const got = (c as any).handleNumType(TYPE.M) as Block[][];
   const want = [
     ["123m", "123m", "123m", "456m"],
     ["111m", "234m"],
@@ -325,7 +325,7 @@ test("commonByKind", () => {
 test("handleCommon", () => {
   const h = new Hand("111222333456m111s");
   const c = new BlockCalculator(h);
-  const got = (c as any).commonAll() as Block[][];
+  const got = (c as any).patternAll() as Block[][];
   const want = [
     ["123m", "123m", "123m", "456m", "111s"],
     ["111m", "234m", "111s"],
@@ -477,7 +477,7 @@ describe("calc", () => {
     };
     const dc = new DoubleCalculator(h, cfg);
     const hands = c.calc(new Tile(TYPE.M, 3, [OPERATOR.RON]));
-    const got = dc.calc(hands);
+    const got = dc.calc(...hands);
 
     // TODO
     expect(!!got).toEqual(true);
@@ -497,7 +497,7 @@ describe("calc", () => {
     };
     const dc = new DoubleCalculator(h, cfg);
     const hands = c.calc(lastTile);
-    const got = dc.calc(hands);
+    const got = dc.calc(...hands);
 
     // TODO
     expect(!!got).toEqual(true);
@@ -515,7 +515,7 @@ describe("calc", () => {
     };
     const dc = new DoubleCalculator(h, cfg);
     const hands = c.calc(new Tile(TYPE.M, 3, [OPERATOR.RON]));
-    const got = dc.calc(hands);
+    const got = dc.calc(...hands);
 
     expect(!!got).toEqual(true);
     expect((got as WinResult).sum).toBe(7);

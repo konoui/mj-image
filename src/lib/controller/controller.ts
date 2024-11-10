@@ -432,7 +432,7 @@ export class Controller {
       ...ret.boardContext,
       sticks: this.placeManager.sticks,
       blindDoraMarkers: blindDoraMarkers,
-    }).calc([ret.hand]);
+    }).calc(ret.hand);
     assert(final);
     return final;
   }
@@ -468,7 +468,7 @@ export class Controller {
     const tc = new BlockCalculator(hand);
     const dc = new DoubleCalculator(hand, env);
     const hands = tc.calc(t);
-    const ret = dc.calc(hands);
+    const ret = dc.calc(...hands);
     if (!ret) return false;
     if (ret.points.length == 0) return false;
 
