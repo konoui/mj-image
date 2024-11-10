@@ -404,10 +404,10 @@ export class Controller {
     this.actor.start();
     this.histories.push(ent);
     const v = this.actor.getSnapshot().status;
-    // if (v != "done")
-    //   throw new Error(
-    //     `unexpected state ${this.actor.getSnapshot().value}(${v})`
-    //   );
+    if (v != "done")
+      throw new Error(
+        `unexpected state ${this.actor.getSnapshot().value}(${v})`
+      );
   }
   startGame() {
     for (;;) {
@@ -486,10 +486,9 @@ export class Controller {
     const hand = this.hand(w);
     if (hand.reached) return false;
     if (hand.hands.length < 3) return false;
+    if (hand.get(t.t, t.n) < 2) return false;
 
-    let sample = t.clone({ removeAll: true });
-    if (hand.get(t.t, sample.n) < 2) return false;
-
+    const sample = t.clone({ removeAll: true });
     const idx = callBlockIndex(w, discardedBy, BLOCK.PON);
 
     const blocks: BlockPon[] = [];
@@ -536,13 +535,10 @@ export class Controller {
     if (hand.reached) return false;
     if (hand.hands.length < 3) return false;
 
-    let called = t.has(OPERATOR.RED)
-      ? t.clone({
-          remove: OPERATOR.TSUMO,
-          add: [OPERATOR.HORIZONTAL, OPERATOR.RED],
-        })
-      : t.clone({ remove: OPERATOR.TSUMO, add: OPERATOR.HORIZONTAL });
-
+    const called = t.clone({
+      remove: OPERATOR.TSUMO,
+      add: [OPERATOR.HORIZONTAL],
+    });
     const blocks: BlockChi[] = [];
     const left =
       called.n - 2 >= 1 &&
@@ -594,7 +590,6 @@ export class Controller {
       for (let t of tiles) {
         const n = hand.get(t.t, t.n);
         for (let j = 0; j < n; j++)
-          // FIXME dec が red じゃなくても red を dec してくれる仕様に依存している。
           toDec.push(t.clone({ remove: OPERATOR.RED }));
       }
 

@@ -511,7 +511,6 @@ export class BlockCalculator {
   }
 
   calc(lastTile: Tile): readonly Block[][] {
-    if (this.hand.drawn != null) lastTile = this.hand.drawn;
     return this.markDrawn(
       [
         ...this.sevenPairs(),
@@ -537,7 +536,11 @@ export class BlockCalculator {
       for (let j = 0; j < hand.length; j++) {
         const block = hand[j];
         if (block.isCalled()) continue;
-        const k = block.tiles.findIndex((t) => t.equals(lastTile));
+        const k = block.tiles.findIndex(
+          (t) =>
+            t.equals(lastTile) &&
+            lastTile.has(OPERATOR.RED) == t.has(OPERATOR.RED)
+        );
         if (k < 0) continue;
         const key = buildKey(block);
         if (m[key]) continue;
@@ -650,34 +653,6 @@ export class BlockCalculator {
   }
 
   private patternAll(): readonly Block[][] {
-    const handleZ = (): readonly Block[][] => {
-      const z: Block[] = [];
-      for (const [zt, n] of forHand({ filterBy: [TYPE.Z] })) {
-        if (this.hand.get(zt, n) == 0) continue;
-        else if (this.hand.get(zt, n) != 3) return [];
-        z.push(
-          new BlockThree([new Tile(zt, n), new Tile(zt, n), new Tile(zt, n)])
-        );
-      }
-      return z.length == 0 ? [] : [z];
-    };
-
-    // handle back tiles as same unknown tiles, Not joker tile.
-    const handleBack = (): readonly Block[][] => {
-      const b: Block[] = [];
-      const bt = TYPE.BACK;
-      const sum = this.hand.get(bt, 0);
-      if (sum < 3) return [];
-      Array(Math.floor(sum / 3))
-        .fill(undefined)
-        .map((_) => {
-          b.push(
-            new BlockThree([new Tile(bt, 0), new Tile(bt, 0), new Tile(bt, 0)])
-          );
-        });
-      return b.length == 0 ? [] : [b];
-    };
-
     // [["123m", "123m"], ["222m", "333m"]]
     // [["123s", "123s"]]
     // result: [["123m", "123m", "123s", "123s"], ["111m", "333m", "123s", "123s"]]
@@ -685,8 +660,8 @@ export class BlockCalculator {
       this.handleNumType(TYPE.M),
       this.handleNumType(TYPE.P),
       this.handleNumType(TYPE.S),
-      handleZ(),
-      handleBack(),
+      this.handleZ(),
+      this.handleBack(),
       [this.hand.called.concat()],
     ].sort((a, b) => b.length - a.length);
     const ret = vvv[0].concat();
@@ -698,6 +673,34 @@ export class BlockCalculator {
       }
     }
     return ret;
+  }
+
+  // handle back tiles as same unknown tiles, Not joker tile.
+  private handleBack(): readonly Block[][] {
+    const b: Block[] = [];
+    const bt = TYPE.BACK;
+    const sum = this.hand.get(bt, 0);
+    if (sum < 3) return [];
+    Array(Math.floor(sum / 3))
+      .fill(undefined)
+      .map((_) => {
+        b.push(
+          new BlockThree([new Tile(bt, 0), new Tile(bt, 0), new Tile(bt, 0)])
+        );
+      });
+    return b.length == 0 ? [] : [b];
+  }
+
+  private handleZ(): readonly Block[][] {
+    const z: Block[] = [];
+    for (const [zt, n] of forHand({ filterBy: [TYPE.Z] })) {
+      if (this.hand.get(zt, n) == 0) continue;
+      else if (this.hand.get(zt, n) != 3) return [];
+      z.push(
+        new BlockThree([new Tile(zt, n), new Tile(zt, n), new Tile(zt, n)])
+      );
+    }
+    return z.length == 0 ? [] : [z];
   }
 
   private handleNumType(

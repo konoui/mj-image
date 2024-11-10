@@ -297,16 +297,32 @@ describe("Block Calculator", () => {
   }
 });
 
-test("calc with drawn", () => {
-  const h = new Hand("1223m123s111z, -123m");
-  h.draw(new Tile(TYPE.M, 2));
-  const c = new BlockCalculator(h);
-  const want = [
-    ["t22m", "123m", "123s", "111z", "-123m"],
-    ["22m", "1t23m", "123s", "111z", "-123m"],
-  ];
-  const got = handsToString(c.calc(h.drawn!));
-  expect(got).toStrictEqual(want);
+describe("Block Calculator with drawn", () => {
+  test("case1", () => {
+    const h = new Hand("1223m123s111z, -123m");
+    h.draw(new Tile(TYPE.M, 2));
+    const c = new BlockCalculator(h);
+    const want = [
+      ["t22m", "123m", "123s", "111z", "-123m"],
+      ["22m", "1t23m", "123s", "111z", "-123m"],
+    ];
+    const got = handsToString(c.calc(h.drawn!));
+    expect(got).toStrictEqual(want);
+  });
+  test("with red", () => {
+    const h = new Hand("44r5566m, 123s, 123p, 11z");
+    const want = [["11z", "456m", "4vr56m", "123p", "123s"]];
+    const c = new BlockCalculator(h);
+    const got = handsToString(c.calc(new Tile(TYPE.M, 5, [OPERATOR.RED])));
+    expect(got).toStrictEqual(want);
+  });
+  test("with red", () => {
+    const h = new Hand("44r5566m, 123s, 123p, 11z");
+    const want = [["11z", "4t56m", "4r56m", "123p", "123s"]];
+    const c = new BlockCalculator(h);
+    const got = handsToString(c.calc(new Tile(TYPE.M, 5, [OPERATOR.TSUMO])));
+    expect(got).toStrictEqual(want);
+  });
 });
 
 test("commonByKind", () => {
