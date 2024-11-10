@@ -416,7 +416,7 @@ export const createControllerMachine = (c: Controller) => {
         notify_distribution: ({ context, event }) => {
           const id = context.genEventID();
           const initHands = context.controller.initialHands();
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const hands = createWindMap("_____________");
             hands[w] = initHands[w].toString();
             const e = {
@@ -467,7 +467,7 @@ export const createControllerMachine = (c: Controller) => {
           const id = context.genEventID();
           const discarded = context.controller.river.lastTile;
           const ltile = discarded.t.clone({ add: OPERATOR.HORIZONTAL });
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e: ChoiceAfterDiscardedEvent = {
               id: id,
               type: "CHOICE_AFTER_DISCARDED" as const,
@@ -527,7 +527,7 @@ export const createControllerMachine = (c: Controller) => {
           const id = context.genEventID();
           const discarded = context.controller.river.lastTile;
           const ltile = discarded.t.clone({ add: OPERATOR.HORIZONTAL });
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e: ChoiceForReachAcceptance = {
               id: id,
               type: "CHOICE_FOR_REACH_ACCEPTANCE",
@@ -554,7 +554,7 @@ export const createControllerMachine = (c: Controller) => {
           );
           const id = context.genEventID();
           const t = event.block.tiles[0].clone({ remove: OPERATOR.HORIZONTAL });
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const ron = context.controller.doWin(
               w,
               event.block.tiles[0].clone({ remove: OPERATOR.HORIZONTAL }),
@@ -594,7 +594,7 @@ export const createControllerMachine = (c: Controller) => {
           const id = context.genEventID();
           const iam = event.iam;
           context.currentWind = iam; // update current wind
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e = {
               id: id,
               type: event.type,
@@ -611,7 +611,7 @@ export const createControllerMachine = (c: Controller) => {
           const id = context.genEventID();
           const iam = context.currentWind;
           const t = event.tile;
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e = {
               id: id,
               type: "DISCARD" as const,
@@ -637,7 +637,7 @@ export const createControllerMachine = (c: Controller) => {
           if (!context.controller.hand(iam).reached)
             context.missingMap[iam] = false;
 
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             let t = new Tile(TYPE.BACK, 0, [OPERATOR.TSUMO]); // mask tile for other players
             if (w == iam) t = drawn;
             const e = {
@@ -656,7 +656,7 @@ export const createControllerMachine = (c: Controller) => {
           assert(event.type == "RON");
           const id = context.genEventID();
           const iam = event.iam;
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e: RonEvent = {
               id: id,
               type: event.type,
@@ -675,7 +675,7 @@ export const createControllerMachine = (c: Controller) => {
           assert(event.type == "TSUMO", `unexpected event ${event.type}`);
           const id = context.genEventID();
           const iam = context.currentWind;
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e = {
               id: id,
               type: event.type,
@@ -693,7 +693,7 @@ export const createControllerMachine = (c: Controller) => {
           const iam = event.iam;
           const t = event.tile.clone({ add: OPERATOR.HORIZONTAL });
           context.oneShotMap[iam] = true; // enable one shot
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e: ReachEvent = {
               id: id,
               type: event.type,
@@ -707,7 +707,7 @@ export const createControllerMachine = (c: Controller) => {
         notify_reach_accepted: ({ context, event }) => {
           assert(event.type == "REACH_ACCEPT");
           const id = context.genEventID();
-          for (let w of Object.values(WIND)) {
+          for (const w of Object.values(WIND)) {
             const e: ReachAcceptedEvent = {
               id: id,
               type: "REACH_ACCEPTED",
@@ -725,7 +725,7 @@ export const createControllerMachine = (c: Controller) => {
           const id = context.genEventID();
           if (event.type == "AN_KAN") {
             const tile = context.controller.wall.openDoraMarker();
-            for (let w of Object.values(WIND)) {
+            for (const w of Object.values(WIND)) {
               const e = {
                 id: id,
                 type: "NEW_DORA" as const,
@@ -740,7 +740,7 @@ export const createControllerMachine = (c: Controller) => {
           }
         },
         disable_one_shot: ({ context, event }) => {
-          for (let w of Object.values(WIND)) context.oneShotMap[w] = false;
+          for (const w of Object.values(WIND)) context.oneShotMap[w] = false;
         },
         disable_one_shot_for_me: ({ context, event }) => {
           context.oneShotMap[context.currentWind] = false;
@@ -750,7 +750,7 @@ export const createControllerMachine = (c: Controller) => {
           const hands = createWindMap("");
           if (event.type == "DRAWN_GAME_BY_NINE_ORPHANS") {
             hands[event.iam] = context.controller.hand(event.iam).toString();
-            for (let w of Object.values(WIND)) {
+            for (const w of Object.values(WIND)) {
               const e = {
                 id: id,
                 type: "END_GAME" as const,
@@ -770,7 +770,7 @@ export const createControllerMachine = (c: Controller) => {
               event.ret,
               event.iam
             );
-            for (let w of Object.values(WIND)) {
+            for (const w of Object.values(WIND)) {
               hands[event.iam] = context.controller.hand(event.iam).toString();
               const e = {
                 id: id,
@@ -792,7 +792,7 @@ export const createControllerMachine = (c: Controller) => {
             const subType = !context.controller.wall.canKan
               ? ("FOUR_KAN" as const)
               : ("FOUR_WIND" as const);
-            for (let w of Object.values(WIND)) {
+            for (const w of Object.values(WIND)) {
               const e = {
                 id: id,
                 type: "END_GAME" as const,
@@ -809,7 +809,7 @@ export const createControllerMachine = (c: Controller) => {
           } else if (!context.controller.wall.canDraw) {
             const wind: Wind[] = [];
             // TODO ノーテン宣言ありなら notify_choice_event_for_ready/waiting_ready_eventを追加する必要あり
-            for (let w of Object.values(WIND)) {
+            for (const w of Object.values(WIND)) {
               const hand = context.controller.hand(w);
               const shan = new ShantenCalculator(hand).calc();
               if (shan == 0) {
@@ -820,14 +820,14 @@ export const createControllerMachine = (c: Controller) => {
 
             const nothing = wind.length == 0 || wind.length == 4;
             const deltas = createWindMap(0);
-            for (let w of Object.values(WIND)) {
+            for (const w of Object.values(WIND)) {
               if (wind.includes(w))
                 deltas[w] += nothing ? 0 : 3000 / wind.length;
               else deltas[w] -= nothing ? 0 : 3000 / (4 - wind.length);
             }
 
             const shouldContinue = wind.length == 4 || deltas[WIND.E] > 0;
-            for (let w of Object.values(WIND)) {
+            for (const w of Object.values(WIND)) {
               const e = {
                 id: id,
                 type: "END_GAME" as const,

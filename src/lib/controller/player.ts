@@ -16,7 +16,7 @@ export class Player extends BaseActor {
     return this.placeManager.wind(this.id);
   }
   setHands(e: DistributeEvent): void {
-    for (let w of Object.values(WIND))
+    for (const w of Object.values(WIND))
       this.hands[w] = new ActorHand(e.hands[w]);
   }
   handleDiscard(tiles: Tile[]) {

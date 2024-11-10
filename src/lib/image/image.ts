@@ -170,7 +170,7 @@ export class ImageHelper extends BaseHelper {
       block instanceof BlockAnKan ? block.tilesWithBack : block.tiles;
     const g = new G();
     let pos = 0;
-    for (let t of tiles) {
+    for (const t of tiles) {
       const size = tileImageSize(t, this.scale);
       const f = t.has(OPERATOR.HORIZONTAL)
         ? this.createRotate90Image.bind(this)
@@ -372,7 +372,7 @@ export const createHand = (
   let maxHeight = 0;
   let sumWidth = 0;
   const elms: MySVGElement[] = [];
-  for (let block of blocks) {
+  for (const block of blocks) {
     const fn = creators[block.type];
     const elm = fn(block);
     sumWidth += elm.width;
@@ -385,7 +385,7 @@ export const createHand = (
 
   const hand = new G();
   let pos = 0;
-  for (let elm of elms) {
+  for (const elm of elms) {
     const diff = viewBoxHeight - elm.height;
     const g = new G().translate(pos, diff);
     g.add(elm.e);
@@ -415,7 +415,7 @@ export const drawBlocks = (
 const getValidIDs = () => {
   const values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   const ids: string[] = [];
-  for (let kind of Object.values(TYPE)) {
+  for (const kind of Object.values(TYPE)) {
     if (kind == TYPE.BACK) {
       ids.push(BaseHelper.buildID(new Tile(kind, 0)));
       continue;

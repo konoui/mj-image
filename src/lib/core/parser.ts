@@ -57,7 +57,7 @@ export function isNum5(t: Tile) {
 }
 
 function isType(v: string): [Type, boolean] {
-  for (let t of Object.values(TYPE)) {
+  for (const t of Object.values(TYPE)) {
     if (t == v) {
       return [t, true];
     }
@@ -214,7 +214,7 @@ export abstract class Block {
     };
   }) {
     const rp = override?.replace;
-    let tiles = [...this.tiles];
+    const tiles = [...this.tiles];
     if (rp) tiles[rp.idx] = rp.tile;
     return blockWrapper(tiles, this._type);
   }
@@ -222,7 +222,7 @@ export abstract class Block {
 
 const toStringForSame = (tiles: readonly Tile[]) => {
   let ret = "";
-  for (let v of tiles) {
+  for (const v of tiles) {
     if (v.t == TYPE.BACK) return tiles.join("");
     ret += v.toString().slice(0, -1);
   }
@@ -232,8 +232,7 @@ const toStringForSame = (tiles: readonly Tile[]) => {
 const toStringForHand = (tiles: readonly Tile[]) => {
   let preType: Type = tiles[0].t;
   let ret = "";
-  for (let i = 0; i < tiles.length; i++) {
-    const tile = tiles[i];
+  for (const tile of tiles) {
     const type = tile.t;
     const nop =
       type == TYPE.BACK ? tile.toString() : tile.toString().slice(0, -1);
@@ -460,7 +459,7 @@ export class Parser {
   }
 
   tiles(): readonly Tile[] {
-    return this.tileSeparators().filter((v) => v != INPUT_SEPARATOR) as Tile[];
+    return this.tileSeparators().filter((v) => v != INPUT_SEPARATOR);
   }
 
   tileSeparators(): readonly (Tile | Separator)[] {
@@ -471,7 +470,7 @@ export class Parser {
     this.validate(this.input);
     for (;;) {
       l.skipWhitespace();
-      let char = l.char;
+      const char = l.char;
       if (char === l.eof) break;
 
       if (char == INPUT_SEPARATOR) {
@@ -480,7 +479,7 @@ export class Parser {
         continue;
       }
 
-      let [type, isType] = isTypeAlias(char, cluster);
+      const [type, isType] = isTypeAlias(char, cluster);
       if (isType) {
         if (type == TYPE.BACK) {
           res.push(new Tile(type, 0));
@@ -505,7 +504,7 @@ export class Parser {
             `encounter unexpected number. n: ${n}, current: ${char}, input: ${l.input}`
           );
         // dummy type
-        cluster.push(new Tile(TYPE.BACK, n));
+        cluster.push({ n });
       }
       l.readChar();
     }
@@ -572,43 +571,39 @@ function detectBlockType(tiles: readonly Tile[]): BLOCK {
     return BLOCK.HAND; // 単騎
   }
 
-  const sameAll = tiles.every((v) => v.equals(tiles[0]));
-  const numOfHorizontals = tiles.filter((v) =>
-    v.has(OPERATOR.HORIZONTAL)
-  ).length;
-  const numOfTsumoDoraTiles = tiles.filter(
+  const isAllSame = tiles.every((v) => v.equals(tiles[0]));
+  const numHorizontals = tiles.filter((v) => v.has(OPERATOR.HORIZONTAL)).length;
+  const numTsumoDora = tiles.filter(
     (v) => v.has(OPERATOR.TSUMO) || v.has(OPERATOR.DORA)
   ).length;
-  const numOfBackTiles = tiles.filter((v) => v.t == TYPE.BACK).length;
+  const numBacks = tiles.filter((v) => v.t == TYPE.BACK).length;
 
-  if (numOfTsumoDoraTiles > 0) return BLOCK.UNKNOWN;
+  if (numTsumoDora > 0) return BLOCK.UNKNOWN;
 
-  if (numOfHorizontals == 0 && numOfBackTiles == 0) return BLOCK.HAND;
+  if (numHorizontals == 0 && numBacks == 0) return BLOCK.HAND;
 
-  if (tiles.length === 3 && numOfBackTiles === 0) {
-    if (sameAll) return BLOCK.PON;
-    if (numOfHorizontals == 1 && areConsecutiveTiles(tiles)) return BLOCK.CHI;
+  if (tiles.length === 3 && numBacks === 0) {
+    if (isAllSame) return BLOCK.PON;
+    if (numHorizontals == 1 && areConsecutiveTiles(tiles)) return BLOCK.CHI;
     return BLOCK.IMAGE_DISCARD;
   }
 
-  if (tiles.length == 4 && numOfBackTiles == 2) return BLOCK.AN_KAN;
-  if (tiles.length == 4 && sameAll) {
-    if (numOfHorizontals == 1) return BLOCK.DAI_KAN;
-    if (numOfHorizontals == 2) return BLOCK.SHO_KAN;
+  if (tiles.length == 4 && numBacks == 2) return BLOCK.AN_KAN;
+  if (tiles.length == 4 && isAllSame) {
+    if (numHorizontals == 1) return BLOCK.DAI_KAN;
+    if (numHorizontals == 2) return BLOCK.SHO_KAN;
   }
 
-  if (numOfHorizontals == 1) return BLOCK.IMAGE_DISCARD;
-  if (numOfTsumoDoraTiles == 0) return BLOCK.IMAGE_DISCARD;
+  if (numHorizontals == 1) return BLOCK.IMAGE_DISCARD;
+  if (numTsumoDora == 0) return BLOCK.IMAGE_DISCARD;
 
   return BLOCK.UNKNOWN;
 }
 
 function areConsecutiveTiles(rtiles: readonly Tile[]): boolean {
   const tiles = [...rtiles].sort(tileSortFunc);
-  if (!tiles.every((t) => tiles[0].t == t.t)) return false;
-  const numbers = tiles.map((t) => {
-    return t.n;
-  });
+  if (tiles.some((t) => tiles[0].t != t.t)) return false;
+  const numbers = tiles.map((t) => t.n);
   for (let i = 0; i < numbers.length - 1; i++) {
     if (numbers[i] != numbers[i + 1] - 1) return false;
   }
@@ -667,7 +662,7 @@ function isOperator(l: Lexer): [{ n: number; ops?: Operator[] }, boolean] {
     else {
       const [n, ok] = isNumber(c);
       if (!ok) break;
-      for (let i = 0; i < found.length; i++) l.readChar();
+      for (const _ of found) l.readChar();
       const tile = new Tile(TYPE.BACK, n, found);
       if (tile.has(OPERATOR.RED) && tile.n != 5)
         throw new Error(`found ${OPERATOR.RED} but number is not 5: ${n}`);

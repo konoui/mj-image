@@ -184,7 +184,7 @@ const handleWind = (lines: string[]) => {
   const hand = "hand";
   const discard = "discard";
   const score = "score";
-  let r: RawWindInput = {};
+  const r: RawWindInput = {};
   let i = 0;
   for (; i < lines.length; i++) {
     const line = lines[i];
@@ -204,7 +204,7 @@ const handleBoard = (lines: string[]) => {
   const reach = "reach";
   const dead = "dead";
 
-  let r: RawBoardInput = {};
+  const r: RawBoardInput = {};
 
   let i = 0;
   for (; i < lines.length; i++) {

@@ -587,7 +587,7 @@ export class Controller {
       const b = blocks[i];
       const tiles = this.cannotDiscardTile(b);
       const toDec: Tile[] = [];
-      for (let t of tiles) {
+      for (const t of tiles) {
         const n = hand.get(t.t, t.n);
         for (let j = 0; j < n; j++)
           toDec.push(t.clone({ remove: OPERATOR.RED }));
@@ -658,7 +658,7 @@ export class Controller {
   }
   cannotDiscardTile(b: BlockChi) {
     const called = b.tiles[0];
-    let h1 = b.tiles[1].n;
+    const h1 = b.tiles[1].n;
     // -423, -978
     if (h1 != 1 && called.n - 2 == h1)
       return [new Tile(called.t, called.n - 3), called];
@@ -673,7 +673,7 @@ export class Controller {
     const blocks: BlockAnKan[] = [];
     // TODO ハイテイ ではカンできない
     if (hand.reached) return false; // FIXME 待ち変更がなければできる
-    for (let [t, n] of forHand()) {
+    for (const [t, n] of forHand()) {
       if (hand.get(t, n) == 4) {
         const tile = new Tile(t, n);
         const tiles = [tile, tile, tile, tile];
@@ -682,7 +682,7 @@ export class Controller {
       }
     }
     if (blocks.length == 0) return false;
-    for (let b of blocks)
+    for (const b of blocks)
       assert(
         b.tiles.filter((t) => t.has(OPERATOR.HORIZONTAL)).length == 0,
         `h op ${b.toString()}`
@@ -696,7 +696,7 @@ export class Controller {
     const called = hand.called.filter((b) => b instanceof BlockPon);
     if (called.length == 0) return false;
     const blocks: BlockShoKan[] = [];
-    for (let cb of called) {
+    for (const cb of called) {
       const pick = cb.tiles[0].clone({
         removeAll: true,
         add: OPERATOR.HORIZONTAL,
@@ -711,7 +711,7 @@ export class Controller {
       }
     }
     if (blocks.length == 0) return false;
-    for (let b of blocks)
+    for (const b of blocks)
       assert(
         b.tiles.filter((t) => t.has(OPERATOR.HORIZONTAL)).length == 2,
         `h op ${b.toString()}`
@@ -763,10 +763,10 @@ export class Controller {
     if (this.river.discards(w).length != 0) return false;
     const h = this.hand(w);
     let num = 0;
-    for (let t of Object.values(TYPE)) {
+    for (const t of Object.values(TYPE)) {
       if (t == TYPE.BACK) continue;
       const arr = t == TYPE.Z ? NZ : N19;
-      for (let n of arr) {
+      for (const n of arr) {
         if (h.get(t, n) > 0) num++;
       }
     }
@@ -779,7 +779,7 @@ export class Controller {
 
 export class ActorHand extends Hand {
   isBackHand() {
-    for (let t of Object.values(TYPE)) {
+    for (const t of Object.values(TYPE)) {
       if (t == TYPE.BACK) continue;
       if (this.sum(t) > 0) return false;
     }
@@ -840,7 +840,7 @@ export abstract class BaseActor {
         this.doraMarkers = [doraMarker];
 
         this.counter.dec(doraMarker);
-        for (let w of Object.values(WIND)) {
+        for (const w of Object.values(WIND)) {
           if (w != e.wind) continue;
           this.counter.dec(...this.hand(w).hands);
         }
@@ -859,7 +859,7 @@ export abstract class BaseActor {
           this.counter.dec(t); // own tile is recorded by DRAW event
           this.counter.addTileToSafeMap(t, e.iam); // そのユーザの捨て牌を現物に追加
           // 立直されている場合、捨て牌は立直ユーザの現物になる
-          for (let w of Object.values(WIND))
+          for (const w of Object.values(WIND))
             if (this.hand(w).reached) this.counter.addTileToSafeMap(t, w);
         }
         break;
@@ -905,7 +905,7 @@ export abstract class BaseActor {
           this.counter.dec(t); // own tile is recorded by DRAW event
           this.counter.addTileToSafeMap(t, e.iam); // そのユーザの捨て牌を現物に追加
           // 立直されている場合、捨て牌は立直ユーザの現物になる
-          for (let w of Object.values(WIND))
+          for (const w of Object.values(WIND))
             if (this.hand(w).reached) this.counter.addTileToSafeMap(t, w);
         }
         break;
@@ -975,7 +975,7 @@ export class Observer extends BaseActor {
     switch (e.type) {
       case "DISTRIBUTE":
         let ready = true;
-        for (let w of Object.values(WIND))
+        for (const w of Object.values(WIND))
           ready &&= this.hand(w).get(TYPE.BACK, 0) == 0;
         if (!ready) break;
         console.debug(
@@ -985,7 +985,7 @@ export class Observer extends BaseActor {
           `map: ${JSON.stringify(this.placeManager.playerMap, null, 2)}`,
           `sticks: ${JSON.stringify(this.placeManager.sticks, null, 2)}`
         );
-        for (let w of Object.values(WIND))
+        for (const w of Object.values(WIND))
           console.debug(
             `${this.placeManager.playerID(w)}(${w})`,
             `init hand: ${this.hand(w).toString()}`
@@ -1032,7 +1032,7 @@ export class Observer extends BaseActor {
         );
         break;
       case "END_GAME":
-        for (let w of Object.values(WIND)) {
+        for (const w of Object.values(WIND)) {
           // Note: show prev wind as wind of player is updated by BaseActor handler
           console.debug(
             `${this.placeManager.playerID(w)}(${prevWind(w)})`,

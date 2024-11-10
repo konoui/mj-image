@@ -78,13 +78,13 @@ export class Wall {
   initialHands() {
     const m = createWindMap("");
     for (let i = 0; i < 3; i++) {
-      for (let w of Object.values(WIND)) {
+      for (const w of Object.values(WIND)) {
         for (let j = 0; j < 4; j++) {
           m[w] += this.draw().toString();
         }
       }
     }
-    for (let w of Object.values(WIND)) m[w] += this.draw().toString();
+    for (const w of Object.values(WIND)) m[w] += this.draw().toString();
     return m;
   }
 
