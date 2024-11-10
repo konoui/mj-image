@@ -71,7 +71,7 @@ export class Tile {
   constructor(
     public readonly t: Type,
     public readonly n: number,
-    public readonly ops: Operator[] = []
+    public readonly ops: readonly Operator[] = []
   ) {}
 
   static from(s: string) {
@@ -82,7 +82,7 @@ export class Tile {
 
   toString(): string {
     if (this.t === TYPE.BACK) return this.t;
-    return `${this.ops.sort(operatorSortFunc).join("")}${this.n}${this.t}`;
+    return `${[...this.ops].sort(operatorSortFunc).join("")}${this.n}${this.t}`;
   }
 
   toJSON() {
@@ -129,14 +129,14 @@ export class Tile {
   }
 }
 
-type BLOCK = (typeof BLOCK)[keyof typeof BLOCK];
+type BlockType = (typeof BLOCK)[keyof typeof BLOCK];
 
 export type SerializedBlock = ReturnType<Block["serialize"]>;
 
 export abstract class Block {
   private readonly _tiles: readonly Tile[];
   private readonly _type;
-  constructor(tiles: readonly Tile[], type: BLOCK) {
+  constructor(tiles: readonly Tile[], type: BlockType) {
     this._tiles = tiles;
     this._type = type;
     if (this.isCalled()) {
@@ -192,7 +192,7 @@ export abstract class Block {
 
   abstract toString(): string;
 
-  is(type: BLOCK): boolean {
+  is(type: BlockType): boolean {
     return this._type == type;
   }
 
@@ -395,7 +395,7 @@ export class BlockHand extends Block {
 
 // block other means tsumo/dora etc...
 export class BlockOther extends Block {
-  constructor(tiles: readonly Tile[], type: BLOCK) {
+  constructor(tiles: readonly Tile[], type: BlockType) {
     super(tiles, type);
   }
 
@@ -407,7 +407,7 @@ export class BlockOther extends Block {
 
 const blockWrapper = (
   tiles: readonly Tile[],
-  type: BLOCK
+  type: BlockType
 ):
   | Block
   | BlockChi
@@ -447,6 +447,8 @@ const blockWrapper = (
   }
 };
 
+type TileBase = { n: number; ops?: readonly Operator[] };
+
 export class Parser {
   readonly maxInputLength = 600;
   constructor(readonly input: string) {
@@ -465,7 +467,7 @@ export class Parser {
   tileSeparators(): readonly (Tile | Separator)[] {
     const l = new Lexer(this.input);
     const res: (Tile | Separator)[] = [];
-    let cluster: { n: number; ops?: Operator[] }[] = [];
+    let cluster: TileBase[] = [];
 
     this.validate(this.input);
     for (;;) {
@@ -563,7 +565,7 @@ export class Parser {
   }
 }
 
-function detectBlockType(tiles: readonly Tile[]): BLOCK {
+function detectBlockType(tiles: readonly Tile[]): BlockType {
   if (tiles.length === 0) return BLOCK.UNKNOWN;
   if (tiles.length === 1) {
     if (tiles[0].has(OPERATOR.DORA)) return BLOCK.IMAGE_DORA;
@@ -610,10 +612,7 @@ function areConsecutiveTiles(rtiles: readonly Tile[]): boolean {
   return true;
 }
 
-function makeTiles(
-  cluster: readonly { n: number; ops?: Operator[] }[],
-  k: Type
-): readonly Tile[] {
+function makeTiles(cluster: readonly TileBase[], k: Type): readonly Tile[] {
   return cluster.map((v) => {
     const tile = new Tile(k, v.n, v.ops);
     // convert 0 alias to red operator
@@ -623,10 +622,7 @@ function makeTiles(
   });
 }
 
-function isTypeAlias(
-  s: string,
-  cluster: { n: number; ops?: Operator[] }[]
-): [Type, boolean] {
+function isTypeAlias(s: string, cluster: TileBase[]): [Type, boolean] {
   const [k, ok] = isType(s);
   if (ok) return [k, true];
 
@@ -650,7 +646,7 @@ function isNumber(v: string): [number, boolean] {
 }
 
 // isOperator will consume char if the next is an operator
-function isOperator(l: Lexer): [{ n: number; ops?: Operator[] }, boolean] {
+function isOperator(l: Lexer): [TileBase, boolean] {
   const ops = Object.values(OPERATOR) as string[];
   if (!ops.includes(l.char)) return [new Tile(TYPE.BACK, 0), false];
 
