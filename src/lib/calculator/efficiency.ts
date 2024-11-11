@@ -1,4 +1,4 @@
-import { OPERATOR, Tile, TYPE } from "../core";
+import { OPERATOR, Tile, Type } from "../core";
 import { assert } from "../myassert";
 import { Hand, ShantenCalculator, forHand } from "./calc";
 
@@ -66,13 +66,17 @@ export class Efficiency {
     hand: Hand,
     options?: {
       fourSetsOnePair?: boolean;
+      typeFilter?: Type[];
     }
   ) {
     let r = Infinity;
     let candidates: Tile[] = [];
 
     const sc = new ShantenCalculator(hand);
-    for (const [t, n] of forHand({ skipBack: true })) {
+    for (const [t, n] of forHand({
+      skipBack: true,
+      filterBy: options?.typeFilter,
+    })) {
       if (hand.get(t, n) >= 4) continue;
       const tile = new Tile(t, n);
       const tiles = hand.inc([tile]);

@@ -53,7 +53,10 @@ export interface HandData {
 }
 
 export function* forHand(options?: { skipBack?: boolean; filterBy?: Type[] }) {
-  const types = options?.filterBy ? options?.filterBy : Object.values(TYPE);
+  const types =
+    options?.filterBy && options.filterBy.length > 0
+      ? options?.filterBy
+      : Object.values(TYPE);
   for (const t of types) {
     if (options?.skipBack && t == TYPE.BACK) continue;
     // Note: the value is related to data length of hand(data[type].length -1)
