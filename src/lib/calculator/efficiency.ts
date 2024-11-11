@@ -29,8 +29,8 @@ export class Efficiency {
   ): Candidate[] {
     assert(choices.length > 0, `choices to discard is zero`);
     const map = new Map<string, Candidate>();
-    let minShanten = Number.POSITIVE_INFINITY;
-    for (let t of choices) {
+    let minShanten = Infinity;
+    for (const t of choices) {
       const tiles = hand.dec([t]);
       const c = Efficiency.candidateTiles(hand, options);
       hand.inc(tiles);
@@ -68,7 +68,7 @@ export class Efficiency {
       fourSetsOnePair?: boolean;
     }
   ) {
-    let r = Number.POSITIVE_INFINITY;
+    let r = Infinity;
     let candidates: Tile[] = [];
 
     const sc = new ShantenCalculator(hand);
