@@ -340,9 +340,9 @@ export class ShantenCalculator {
       else if (bb == 1) b[2] = 1;
 
       let min = 13;
-      const mr = this.patternByNumType(TYPE.M);
-      const pr = this.patternByNumType(TYPE.P);
-      const sr = this.patternByNumType(TYPE.S);
+      const mr = this.patternNumType(TYPE.M);
+      const pr = this.patternNumType(TYPE.P);
+      const sr = this.patternNumType(TYPE.S);
       for (const m of [mr.patternA, mr.patternB]) {
         for (const p of [pr.patternA, pr.patternB]) {
           for (const s of [sr.patternA, sr.patternB]) {
@@ -374,7 +374,7 @@ export class ShantenCalculator {
     }
     return min;
   }
-  private patternByNumType(
+  private patternNumType(
     t: typeof TYPE.M | typeof TYPE.S | typeof TYPE.P,
     n = 1
   ): {
@@ -383,7 +383,7 @@ export class ShantenCalculator {
   } {
     if (n > 9) return this.groupRemainingTiles(t);
 
-    let max = this.patternByNumType(t, n + 1);
+    let max = this.patternNumType(t, n + 1);
 
     if (
       n <= 7 &&
@@ -396,7 +396,7 @@ export class ShantenCalculator {
         new Tile(t, n + 1),
         new Tile(t, n + 2),
       ]);
-      const r = this.patternByNumType(t, n);
+      const r = this.patternNumType(t, n);
       this.hand.inc(tiles);
       r.patternA[0]++, r.patternB[0]++;
       if (
@@ -415,7 +415,7 @@ export class ShantenCalculator {
 
     if (this.hand.get(t, n) >= 3) {
       const tiles = this.hand.dec(new Array(3).fill(new Tile(t, n)));
-      const r = this.patternByNumType(t, n);
+      const r = this.patternNumType(t, n);
       this.hand.inc(tiles);
       r.patternA[0]++, r.patternB[0]++;
       if (
@@ -659,17 +659,11 @@ export class BlockCalculator {
 
   // handle back tiles as same unknown tiles, Not joker tile.
   private handleBack(): readonly Block[][] {
-    const b: Block[] = [];
     const bt = TYPE.BACK;
     const sum = this.hand.get(bt, 0);
     if (sum < 3) return [];
-    Array(Math.floor(sum / 3))
-      .fill(undefined)
-      .map((_) => {
-        b.push(
-          new BlockThree([new Tile(bt, 0), new Tile(bt, 0), new Tile(bt, 0)])
-        );
-      });
+    const p = new Tile(bt, 0);
+    const b = Array(Math.floor(sum / 3)).fill(new BlockThree([p, p, p]));
     return b.length == 0 ? [] : [b];
   }
 
@@ -678,9 +672,8 @@ export class BlockCalculator {
     for (const [zt, n] of forHand({ filterBy: [TYPE.Z] })) {
       if (this.hand.get(zt, n) == 0) continue;
       else if (this.hand.get(zt, n) != 3) return [];
-      z.push(
-        new BlockThree([new Tile(zt, n), new Tile(zt, n), new Tile(zt, n)])
-      );
+      const p = new Tile(zt, n);
+      z.push(new BlockThree([p, p, p]));
     }
     return z.length == 0 ? [] : [z];
   }
