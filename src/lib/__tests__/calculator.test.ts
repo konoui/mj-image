@@ -7,7 +7,7 @@ import {
   BoardContext,
   WinResult,
 } from "../calculator";
-import { TYPE, OPERATOR } from "../core/constants";
+import { TYPE, OP } from "../core/constants";
 import { Block, Parser, Tile } from "../core/parser";
 import { handsToString } from "./utils/helper";
 describe("Hand", () => {
@@ -24,7 +24,7 @@ describe("Hand", () => {
       [TYPE.Z]: [0, 1, 1, 1, 0, 1, 0, 0],
       called: new Parser("-123s").parse(),
       reached: false,
-      tsumo: new Tile(TYPE.P, 2, [OPERATOR.TSUMO]),
+      tsumo: new Tile(TYPE.P, 2, [OP.TSUMO]),
     };
     expect((c as any).data).toStrictEqual(want);
   });
@@ -43,7 +43,7 @@ describe("Hand", () => {
     // initial check
     expect(getData(h)).toStrictEqual(want);
 
-    const tsumo = new Tile(TYPE.M, 2, [OPERATOR.TSUMO]);
+    const tsumo = new Tile(TYPE.M, 2, [OP.TSUMO]);
     h.draw(tsumo);
     want.tsumo = tsumo;
     want[TYPE.M][tsumo.n] += 1;
@@ -76,13 +76,13 @@ describe("Hand", () => {
   });
   test("inc/dec", () => {
     const h = new Hand("405556m");
-    const dtiles = h.dec([new Tile(TYPE.M, 5, [OPERATOR.RED])]);
+    const dtiles = h.dec([new Tile(TYPE.M, 5, [OP.RED])]);
     h.inc(dtiles);
     expect(h.toString()).toStrictEqual("4r55556m");
   });
   test("inc/dec", () => {
     const h = new Hand("4556m");
-    const itiles = h.inc([new Tile(TYPE.M, 5, [OPERATOR.RED])]);
+    const itiles = h.inc([new Tile(TYPE.M, 5, [OP.RED])]);
     h.dec(itiles);
     expect(h.toString()).toStrictEqual("4556m");
   });
@@ -313,14 +313,14 @@ describe("Block Calculator with drawn", () => {
     const h = new Hand("44r5566m, 123s, 123p, 11z");
     const want = [["11z", "456m", "4vr56m", "123p", "123s"]];
     const c = new BlockCalculator(h);
-    const got = handsToString(c.calc(new Tile(TYPE.M, 5, [OPERATOR.RED])));
+    const got = handsToString(c.calc(new Tile(TYPE.M, 5, [OP.RED])));
     expect(got).toStrictEqual(want);
   });
   test("with red", () => {
     const h = new Hand("44r5566m, 123s, 123p, 11z");
     const want = [["11z", "4t56m", "4r56m", "123p", "123s"]];
     const c = new BlockCalculator(h);
-    const got = handsToString(c.calc(new Tile(TYPE.M, 5, [OPERATOR.TSUMO])));
+    const got = handsToString(c.calc(new Tile(TYPE.M, 5, [OP.TSUMO])));
     expect(got).toStrictEqual(want);
   });
 });
@@ -355,7 +355,7 @@ describe("double Calculator", () => {
   const tests = [
     {
       input: "123123s111222m22z",
-      lastTile: new Tile(TYPE.S, 1, [OPERATOR.TSUMO]),
+      lastTile: new Tile(TYPE.S, 1, [OP.TSUMO]),
       want: [
         {
           points: [
@@ -383,7 +383,7 @@ describe("double Calculator", () => {
     },
     {
       input: "111222333s123m99s",
-      lastTile: new Tile(TYPE.S, 1, [OPERATOR.TSUMO]),
+      lastTile: new Tile(TYPE.S, 1, [OP.TSUMO]),
       want: [
         {
           points: [
@@ -442,7 +442,7 @@ describe("double Calculator", () => {
     },
     {
       input: "23456788mm, -234s, 2-34p",
-      lastTile: new Tile(TYPE.M, 3, [OPERATOR.TSUMO]),
+      lastTile: new Tile(TYPE.M, 3, [OP.TSUMO]),
       want: [
         {
           points: [
@@ -455,7 +455,7 @@ describe("double Calculator", () => {
     },
     {
       input: "111333m11p,5-5-55s, -3333s",
-      lastTile: new Tile(TYPE.M, 3, [OPERATOR.TSUMO]),
+      lastTile: new Tile(TYPE.M, 3, [OP.TSUMO]),
       want: [{ points: [{ name: "対々和", double: 2 }], fu: 50 }],
     },
   ];
@@ -492,7 +492,7 @@ describe("calc", () => {
       ronWind: "2w",
     };
     const dc = new DoubleCalculator(h, cfg);
-    const hands = c.calc(new Tile(TYPE.M, 3, [OPERATOR.RON]));
+    const hands = c.calc(new Tile(TYPE.M, 3, [OP.RON]));
     const got = dc.calc(...hands);
 
     // TODO
@@ -502,7 +502,7 @@ describe("calc", () => {
   });
   test("2", () => {
     const input = "-123s,-234s,-456m, -567m, 11m";
-    const lastTile = new Tile(TYPE.M, 1, [OPERATOR.TSUMO]);
+    const lastTile = new Tile(TYPE.M, 1, [OP.TSUMO]);
     const h = new Hand(input);
     const c = new BlockCalculator(h);
     const cfg: BoardContext = {
@@ -524,13 +524,13 @@ describe("calc", () => {
     const h = new Hand(input);
     const c = new BlockCalculator(h);
     const cfg: BoardContext = {
-      doraMarkers: [new Tile(TYPE.M, 9, [OPERATOR.TSUMO])],
+      doraMarkers: [new Tile(TYPE.M, 9, [OP.TSUMO])],
       myWind: "1w",
       round: "1w1",
       ronWind: "2w",
     };
     const dc = new DoubleCalculator(h, cfg);
-    const hands = c.calc(new Tile(TYPE.M, 3, [OPERATOR.RON]));
+    const hands = c.calc(new Tile(TYPE.M, 3, [OP.RON]));
     const got = dc.calc(...hands);
 
     expect(!!got).toEqual(true);

@@ -1,6 +1,6 @@
 import { Tile, Block, BlockAnKan, BlockHand } from "../core/parser";
 import { Svg, G, Image, Text, Use, Symbol } from "@svgdotjs/svg.js";
-import { FONT_FAMILY, TILE_CONTEXT, TYPE, OPERATOR, BLOCK } from "../core";
+import { FONT_FAMILY, TILE_CONTEXT, TYPE, OP, BLOCK } from "../core";
 import { assert } from "../myassert";
 
 export interface ImageHelperConfig {
@@ -45,10 +45,10 @@ const tileImageSize = (
 } => {
   const h = parseFloat((TILE_CONTEXT.HEIGHT * scale).toPrecision(5));
   const w = parseFloat((TILE_CONTEXT.WIDTH * scale).toPrecision(5));
-  const size = tile.has(OPERATOR.HORIZONTAL)
+  const size = tile.has(OP.HORIZONTAL)
     ? { width: h, height: w, baseWidth: w, baseHeight: h }
     : { width: w, height: h, w, baseWidth: w, baseHeight: h };
-  if (tile.has(OPERATOR.TSUMO) || tile.has(OPERATOR.DORA))
+  if (tile.has(OP.TSUMO) || tile.has(OP.DORA))
     size.width += w * TILE_CONTEXT.TEXT_SCALE; // note not contains text height
   return size;
 };
@@ -83,7 +83,7 @@ class BaseHelper {
       img = new Use().use(BaseHelper.buildID(tile));
     }
 
-    if (tile instanceof Tile && tile.has(OPERATOR.COLOR_GRAYSCALE)) {
+    if (tile instanceof Tile && tile.has(OP.COLOR_GRAYSCALE)) {
       img.css({ filter: "contrast(65%)" });
     }
     return img;
@@ -149,7 +149,7 @@ class BaseHelper {
       return tile == 100 ? "stick100" : "stick1000";
     }
     // original file is 0s/0m/0p
-    const n = tile.t == TYPE.BACK || tile.has(OPERATOR.RED) ? 0 : tile.n;
+    const n = tile.t == TYPE.BACK || tile.has(OP.RED) ? 0 : tile.n;
     return `${tile.t}${n}`;
   }
 
@@ -172,10 +172,10 @@ export class ImageHelper extends BaseHelper {
     let pos = 0;
     for (const t of tiles) {
       const size = tileImageSize(t, this.scale);
-      const f = t.has(OPERATOR.HORIZONTAL)
+      const f = t.has(OP.HORIZONTAL)
         ? this.createRotate90Image.bind(this)
         : this.createImage.bind(this);
-      const y = t.has(OPERATOR.HORIZONTAL) ? this.getDiffTileHeightWidth(t) : 0;
+      const y = t.has(OP.HORIZONTAL) ? this.getDiffTileHeightWidth(t) : 0;
 
       const img = f(t, pos, y);
       g.add(img);
@@ -185,14 +185,14 @@ export class ImageHelper extends BaseHelper {
   }
 
   createBlockPonChiKan(block: Block) {
-    const idx = block.tiles.findIndex((d) => d.has(OPERATOR.HORIZONTAL));
+    const idx = block.tiles.findIndex((d) => d.has(OP.HORIZONTAL));
 
     let pos = 0;
     const g = new G();
     if (block.type == BLOCK.SHO_KAN) {
       let lastIdx = idx;
       for (let i = 0; i < block.tiles.length; i++)
-        if (block.tiles[i].has(OPERATOR.HORIZONTAL)) lastIdx = i;
+        if (block.tiles[i].has(OP.HORIZONTAL)) lastIdx = i;
 
       for (let i = 0; i < block.tiles.length; i++) {
         const size = tileImageSize(block.tiles[i], this.scale);
@@ -294,7 +294,7 @@ const getBlockCreators = (h: ImageHelper, options?: DrawOptions) => {
     [BLOCK.IMAGE_DORA]: function (block: Block) {
       block =
         options?.doraText == false
-          ? new BlockHand([block.tiles[0].clone({ remove: OPERATOR.DORA })])
+          ? new BlockHand([block.tiles[0].clone({ remove: OP.DORA })])
           : block;
       const size = blockImageSize(block, scale);
       const g = new G();
@@ -308,7 +308,7 @@ const getBlockCreators = (h: ImageHelper, options?: DrawOptions) => {
     [BLOCK.TSUMO]: function (block: Block) {
       block =
         options?.tsumoText == false
-          ? new BlockHand([block.tiles[0].clone({ remove: OPERATOR.TSUMO })])
+          ? new BlockHand([block.tiles[0].clone({ remove: OP.TSUMO })])
           : block;
       const size = blockImageSize(block, scale);
       const g = new G();
@@ -343,9 +343,7 @@ const getBlockCreators = (h: ImageHelper, options?: DrawOptions) => {
     },
     [BLOCK.UNKNOWN]: function (block: Block) {
       // unable to draw tsumo/dora
-      if (
-        block.tiles.some((t) => t.has(OPERATOR.TSUMO) || t.has(OPERATOR.DORA))
-      )
+      if (block.tiles.some((t) => t.has(OP.TSUMO) || t.has(OP.DORA)))
         throw new Error("found an unknown block with operator tiles");
       const size = blockImageSize(block, scale);
       const g = h.createBlockHandDiscard(block);

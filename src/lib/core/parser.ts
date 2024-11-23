@@ -1,13 +1,13 @@
 import { Lexer } from "./lexer";
-import { BLOCK, OPERATOR, TYPE, INPUT_SEPARATOR, Type } from "./";
+import { BLOCK, OP, TYPE, INPUT_SEPARATOR, Type } from "./";
 
 type Separator = typeof INPUT_SEPARATOR;
 
 export const tileSortFunc = (i: Tile, j: Tile) => {
   if (i.t == j.t) {
     if (isNum5(i) && isNum5(j)) {
-      if (i.has(OPERATOR.RED)) return -1;
-      if (j.has(OPERATOR.RED)) return 1;
+      if (i.has(OP.RED)) return -1;
+      if (j.has(OP.RED)) return 1;
     }
     return i.n - j.n;
   }
@@ -24,12 +24,12 @@ export const tileSortFunc = (i: Tile, j: Tile) => {
 
 const operatorSortFunc = (i: Operator, j: Operator) => {
   const lookup = {
-    [OPERATOR.HORIZONTAL]: 1,
-    [OPERATOR.TSUMO]: 2,
-    [OPERATOR.RON]: 3,
-    [OPERATOR.DORA]: 4,
-    [OPERATOR.COLOR_GRAYSCALE]: 5,
-    [OPERATOR.RED]: 6,
+    [OP.HORIZONTAL]: 1,
+    [OP.TSUMO]: 2,
+    [OP.RON]: 3,
+    [OP.DORA]: 4,
+    [OP.COLOR_GRAYSCALE]: 5,
+    [OP.RED]: 6,
   };
   return lookup[i] - lookup[j];
 };
@@ -37,14 +37,12 @@ const operatorSortFunc = (i: Operator, j: Operator) => {
 export const sortCalledTiles = (arr: readonly Tile[]) => {
   const indexes: number[] = [];
   arr.forEach((t, index) => {
-    if (t.has(OPERATOR.HORIZONTAL)) {
+    if (t.has(OP.HORIZONTAL)) {
       indexes.push(index);
     }
   });
 
-  const sorted = arr
-    .filter((v) => !v.has(OPERATOR.HORIZONTAL))
-    .sort(tileSortFunc);
+  const sorted = arr.filter((v) => !v.has(OP.HORIZONTAL)).sort(tileSortFunc);
 
   indexes.forEach((index) => {
     sorted.splice(index, 0, arr[index]);
@@ -65,7 +63,7 @@ function isType(v: string): [Type, boolean] {
   return [TYPE.BACK, false];
 }
 
-type Operator = (typeof OPERATOR)[keyof typeof OPERATOR];
+type Operator = (typeof OP)[keyof typeof OP];
 
 export class Tile {
   constructor(
@@ -285,7 +283,7 @@ export class BlockAnKan extends Block {
     if (ftiles.length < tiles.length) {
       if (isNum5(sample)) {
         const t = new Tile(sample.t, 5);
-        super([t.clone({ add: OPERATOR.RED }), t, t, t], BLOCK.AN_KAN);
+        super([t.clone({ add: OP.RED }), t, t, t], BLOCK.AN_KAN);
         return;
       }
       super([sample, sample, sample, sample], BLOCK.AN_KAN);
@@ -295,8 +293,8 @@ export class BlockAnKan extends Block {
   }
 
   get tilesWithBack() {
-    const pick = this.tiles[0].clone({ remove: OPERATOR.RED });
-    const sample = isNum5(pick) ? pick.clone({ add: OPERATOR.RED }) : pick;
+    const pick = this.tiles[0].clone({ remove: OP.RED });
+    const sample = isNum5(pick) ? pick.clone({ add: OP.RED }) : pick;
     return [new Tile(TYPE.BACK, 0), sample, pick, new Tile(TYPE.BACK, 0)];
   }
 
@@ -568,15 +566,15 @@ export class Parser {
 function detectBlockType(tiles: readonly Tile[]): BlockType {
   if (tiles.length === 0) return BLOCK.UNKNOWN;
   if (tiles.length === 1) {
-    if (tiles[0].has(OPERATOR.DORA)) return BLOCK.IMAGE_DORA;
-    if (tiles[0].has(OPERATOR.TSUMO)) return BLOCK.TSUMO;
+    if (tiles[0].has(OP.DORA)) return BLOCK.IMAGE_DORA;
+    if (tiles[0].has(OP.TSUMO)) return BLOCK.TSUMO;
     return BLOCK.HAND; // 単騎
   }
 
   const isAllSame = tiles.every((v) => v.equals(tiles[0]));
-  const numHorizontals = tiles.filter((v) => v.has(OPERATOR.HORIZONTAL)).length;
+  const numHorizontals = tiles.filter((v) => v.has(OP.HORIZONTAL)).length;
   const numTsumoDora = tiles.filter(
-    (v) => v.has(OPERATOR.TSUMO) || v.has(OPERATOR.DORA)
+    (v) => v.has(OP.TSUMO) || v.has(OP.DORA)
   ).length;
   const numBacks = tiles.filter((v) => v.t == TYPE.BACK).length;
 
@@ -616,8 +614,7 @@ function makeTiles(cluster: readonly TileBase[], k: Type): readonly Tile[] {
   return cluster.map((v) => {
     const tile = new Tile(k, v.n, v.ops);
     // convert 0 alias to red operator
-    if (tile.isNum() && tile.n == 0)
-      return tile.clone({ n: 5, add: OPERATOR.RED });
+    if (tile.isNum() && tile.n == 0) return tile.clone({ n: 5, add: OP.RED });
     return tile;
   });
 }
@@ -647,7 +644,7 @@ function isNumber(v: string): [number, boolean] {
 
 // isOperator will consume char if the next is an operator
 function isOperator(l: Lexer): [TileBase, boolean] {
-  const ops = Object.values(OPERATOR) as string[];
+  const ops = Object.values(OP) as string[];
   if (!ops.includes(l.char)) return [new Tile(TYPE.BACK, 0), false];
 
   const found: Operator[] = [];
@@ -660,12 +657,10 @@ function isOperator(l: Lexer): [TileBase, boolean] {
       if (!ok) break;
       for (const _ of found) l.readChar();
       const tile = new Tile(TYPE.BACK, n, found);
-      if (tile.has(OPERATOR.RED) && tile.n != 5)
-        throw new Error(`found ${OPERATOR.RED} but number is not 5: ${n}`);
-      if (tile.has(OPERATOR.DORA) && tile.has(OPERATOR.TSUMO))
-        throw new Error(
-          `unable to specify both ${OPERATOR.DORA} and ${OPERATOR.TSUMO}`
-        );
+      if (tile.has(OP.RED) && tile.n != 5)
+        throw new Error(`found ${OP.RED} but number is not 5: ${n}`);
+      if (tile.has(OP.DORA) && tile.has(OP.TSUMO))
+        throw new Error(`unable to specify both ${OP.DORA} and ${OP.TSUMO}`);
       return [tile, true];
     }
   }

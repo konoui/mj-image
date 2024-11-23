@@ -15,7 +15,7 @@ export const TYPE = {
   Z: "z",
   BACK: "_",
 } as const;
-export const OPERATOR = {
+export const OP = {
   TSUMO: "t",
   RON: "v",
   DORA: "d",

@@ -10,7 +10,7 @@ import {
   ChoiceAfterCalled,
 } from "../controller";
 import { Tile } from "../core/parser";
-import { TYPE, OPERATOR, WIND } from "../core/constants";
+import { TYPE, OP, WIND } from "../core/constants";
 import { createWindMap, Wind } from "../core";
 describe("controller", () => {
   test("立直直後のロンは立直棒を消費しない/ダブルリーチ/一発のテスト", () => {
@@ -268,7 +268,7 @@ describe("callable", () => {
   test("can-dai-kan", () => {
     const { c } = createLocalGame();
     c.observer.hands["1w"] = new ActorHand("555m");
-    const got = c.doDaiKan("1w", "2w", new Tile(TYPE.M, 5, [OPERATOR.RED]));
+    const got = c.doDaiKan("1w", "2w", new Tile(TYPE.M, 5, [OP.RED]));
     expect(got.toString()).toBe("555-r5m");
   });
 });
@@ -314,7 +314,7 @@ class MockPlayer extends Player {
         e.choices.REACH = false;
         assert(e.choices.DISCARD);
         const tsumo = e.choices.DISCARD.filter((t) =>
-          Tile.from(t).has(OPERATOR.TSUMO)
+          Tile.from(t).has(OP.TSUMO)
         );
         e.choices.DISCARD = tsumo;
         this.eventHandler.emit(e);

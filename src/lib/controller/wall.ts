@@ -1,4 +1,4 @@
-import { OPERATOR, TYPE, WIND } from "../core/constants";
+import { OP, TYPE, WIND } from "../core/constants";
 import { Tile } from "../core/parser";
 import { createWindMap } from "../core";
 import { shuffle } from "./managers";
@@ -101,7 +101,7 @@ export class Wall {
           for (let n of values) {
             let tile = new Tile(t, n);
             if (t != TYPE.Z && i == 3 && n == 5)
-              tile = tile.clone({ add: OPERATOR.RED });
+              tile = tile.clone({ add: OP.RED });
             this.walls.drawable.push(tile.toString());
           }
         }

@@ -2,7 +2,7 @@ import { createActor } from "xstate";
 import { assert } from "../myassert";
 import {
   TYPE,
-  OPERATOR,
+  OP,
   Wind,
   Round,
   WIND,
@@ -129,9 +129,7 @@ export class Controller {
     if (reached) {
       const d = this.river.discards(w);
       reached =
-        d.length == 0 || (d.length == 1 && d[0].t.has(OPERATOR.HORIZONTAL))
-          ? 2
-          : 1;
+        d.length == 0 || (d.length == 1 && d[0].t.has(OP.HORIZONTAL)) ? 2 : 1;
     }
     return {
       doraMarkers: this.observer.doraMarkers,
@@ -269,7 +267,7 @@ export class Controller {
           assert(tiles, `${selected.type} choice is none`);
           this.actor.send({
             type: selected.type,
-            tile: Tile.from(tiles[0]).clone({ remove: OPERATOR.TSUMO }),
+            tile: Tile.from(tiles[0]).clone({ remove: OP.TSUMO }),
             iam: w,
           });
           break;
@@ -493,17 +491,17 @@ export class Controller {
 
     const blocks: BlockPon[] = [];
     const base = new BlockPon([sample, sample, sample]).clone({
-      replace: { idx, tile: t.clone({ add: OPERATOR.HORIZONTAL }) },
+      replace: { idx, tile: t.clone({ add: OP.HORIZONTAL }) },
     });
     let block = base;
 
     // if discarded tile is RED
-    if (isNum5(t) && t.has(OPERATOR.RED))
+    if (isNum5(t) && t.has(OP.RED))
       block = base.clone({
         replace: {
           idx: idx,
           tile: sample.clone({
-            add: [OPERATOR.RED, OPERATOR.HORIZONTAL],
+            add: [OP.RED, OP.HORIZONTAL],
           }),
         },
       });
@@ -511,7 +509,7 @@ export class Controller {
     const ridx = (idx % 2) + 1;
     if (isNum5(t) && hand.get(t.t, 0) > 0) {
       block = base.clone({
-        replace: { idx: ridx, tile: sample.clone({ add: OPERATOR.RED }) },
+        replace: { idx: ridx, tile: sample.clone({ add: OP.RED }) },
       });
     }
 
@@ -536,8 +534,8 @@ export class Controller {
     if (hand.hands.length < 3) return false;
 
     const called = t.clone({
-      remove: OPERATOR.TSUMO,
-      add: [OPERATOR.HORIZONTAL],
+      remove: OP.TSUMO,
+      add: [OP.HORIZONTAL],
     });
     const blocks: BlockChi[] = [];
     const left =
@@ -589,8 +587,7 @@ export class Controller {
       const toDec: Tile[] = [];
       for (const t of tiles) {
         const n = hand.get(t.t, t.n);
-        for (let j = 0; j < n; j++)
-          toDec.push(t.clone({ remove: OPERATOR.RED }));
+        for (let j = 0; j < n; j++) toDec.push(t.clone({ remove: OP.RED }));
       }
 
       const ltiles = hand.dec([...toDec, b.tiles[1], b.tiles[2]]);
@@ -618,11 +615,11 @@ export class Controller {
     return filtered
       .map((b) => {
         if (isNum5(b.tiles[1])) {
-          const rt = b.tiles[1].clone({ add: OPERATOR.RED });
+          const rt = b.tiles[1].clone({ add: OP.RED });
           const n = b.clone({ replace: { idx: 1, tile: rt } });
           return n;
         } else if (isNum5(b.tiles[2])) {
-          const rt = b.tiles[2].clone({ add: OPERATOR.RED });
+          const rt = b.tiles[2].clone({ add: OP.RED });
           const n = b.clone({ replace: { idx: 2, tile: rt } });
           return n;
         }
@@ -677,14 +674,14 @@ export class Controller {
       if (hand.get(t, n) == 4) {
         const tile = new Tile(t, n);
         const tiles = [tile, tile, tile, tile];
-        if (isNum5(tile)) tiles[1] = tile.clone({ add: OPERATOR.RED });
+        if (isNum5(tile)) tiles[1] = tile.clone({ add: OP.RED });
         blocks.push(new BlockAnKan(tiles));
       }
     }
     if (blocks.length == 0) return false;
     for (const b of blocks)
       assert(
-        b.tiles.filter((t) => t.has(OPERATOR.HORIZONTAL)).length == 0,
+        b.tiles.filter((t) => t.has(OP.HORIZONTAL)).length == 0,
         `h op ${b.toString()}`
       );
     return blocks;
@@ -699,12 +696,12 @@ export class Controller {
     for (const cb of called) {
       const pick = cb.tiles[0].clone({
         removeAll: true,
-        add: OPERATOR.HORIZONTAL,
+        add: OP.HORIZONTAL,
       });
       if (hand.get(pick.t, pick.n) == 1) {
         const tile =
           isNum5(pick) && hand.get(pick.t, 0) > 0
-            ? pick.clone({ add: OPERATOR.RED })
+            ? pick.clone({ add: OP.RED })
             : pick;
         // FIXME 追加の HORIZONTAL は最後でいいのか
         blocks.push(new BlockShoKan([...cb.tiles, tile]));
@@ -713,7 +710,7 @@ export class Controller {
     if (blocks.length == 0) return false;
     for (const b of blocks)
       assert(
-        b.tiles.filter((t) => t.has(OPERATOR.HORIZONTAL)).length == 2,
+        b.tiles.filter((t) => t.has(OP.HORIZONTAL)).length == 2,
         `h op ${b.toString()}`
       );
 
@@ -729,32 +726,32 @@ export class Controller {
 
     const idx = callBlockIndex(w, discardedBy, BLOCK.DAI_KAN);
     let block = new BlockDaiKan([sample, sample, sample, sample]).clone({
-      replace: { idx, tile: sample.clone({ add: OPERATOR.HORIZONTAL }) },
+      replace: { idx, tile: sample.clone({ add: OP.HORIZONTAL }) },
     });
 
     // 捨て牌が red ならその idx を red にする
-    if (isNum5(t) && t.has(OPERATOR.RED)) {
+    if (isNum5(t) && t.has(OP.RED)) {
       block = block.clone({
         replace: {
           idx: idx,
-          tile: sample.clone({ add: [OPERATOR.HORIZONTAL, OPERATOR.RED] }),
+          tile: sample.clone({ add: [OP.HORIZONTAL, OP.RED] }),
         },
       });
     }
     // 捨て牌が non red なら鳴いた位置からずらして red にする
-    else if (isNum5(t) && !t.has(OPERATOR.RED)) {
+    else if (isNum5(t) && !t.has(OP.RED)) {
       assert(
         hand.get(t.t, 0) > 0,
         `hand does not have red tile: ${hand.toString()}`
       );
       const ridx = (idx % 3) + 1;
       block = block.clone({
-        replace: { idx: ridx, tile: sample.clone({ add: OPERATOR.RED }) },
+        replace: { idx: ridx, tile: sample.clone({ add: OP.RED }) },
       });
     }
 
     assert(
-      block.tiles.filter((t) => t.has(OPERATOR.HORIZONTAL)).length == 1,
+      block.tiles.filter((t) => t.has(OP.HORIZONTAL)).length == 1,
       `h op ${block.toString()}`
     );
     return block;
@@ -871,27 +868,21 @@ export abstract class BaseActor {
         this.hands[e.iam].call(block);
         this.river.markCalled();
         if (e.iam != e.wind)
-          this.counter.dec(
-            ...block.tiles.filter((t) => !t.has(OPERATOR.HORIZONTAL))
-          );
+          this.counter.dec(...block.tiles.filter((t) => !t.has(OP.HORIZONTAL)));
         break;
       }
       case "SHO_KAN": {
         const block = BlockShoKan.from(e.block.tiles);
         this.hands[e.iam].kan(block);
         if (e.iam != e.wind)
-          this.counter.dec(
-            block.tiles.filter((t) => t.has(OPERATOR.HORIZONTAL))[0]
-          );
+          this.counter.dec(block.tiles.filter((t) => t.has(OP.HORIZONTAL))[0]);
         break;
       }
       case "AN_KAN": {
         const block = BlockAnKan.from(e.block.tiles);
         this.hands[e.iam].kan(block);
         if (e.iam != e.wind)
-          this.counter.dec(
-            ...block.tiles.filter((t) => !t.has(OPERATOR.HORIZONTAL))
-          );
+          this.counter.dec(...block.tiles.filter((t) => !t.has(OP.HORIZONTAL)));
         break;
       }
       case "REACH": {

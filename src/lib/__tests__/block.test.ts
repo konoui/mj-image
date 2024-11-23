@@ -4,7 +4,7 @@ import {
   ShantenCalculator,
   Efficiency,
 } from "../calculator";
-import { TYPE, OPERATOR } from "../core/constants";
+import { TYPE, OP } from "../core/constants";
 import { Block, BlockAnKan, BlockHand, Parser, Tile } from "../core/parser";
 import { handsToString } from "./utils/helper";
 

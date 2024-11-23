@@ -1,7 +1,7 @@
 import {
   BLOCK,
   TYPE,
-  OPERATOR,
+  OP,
   Round,
   Wind,
   WIND,
@@ -115,7 +115,7 @@ export class Hand {
       let count = this.get(t, n);
       if (t != TYPE.Z && n == 5 && this.get(t, 0) > 0) {
         count -= this.get(t, 0); // for red
-        tiles.push(new Tile(t, n, [OPERATOR.RED]));
+        tiles.push(new Tile(t, n, [OP.RED]));
       }
       for (let i = 0; i < count; i++) {
         tiles.push(new Tile(t, n));
@@ -129,7 +129,7 @@ export class Hand {
         `hand has drawn: ${this.drawn} but no tile in hands: ${tiles.join("")}`
       );
 
-      tiles[idx] = tiles[idx].clone({ add: OPERATOR.TSUMO });
+      tiles[idx] = tiles[idx].clone({ add: OP.TSUMO });
     }
     return tiles;
   }
@@ -143,7 +143,7 @@ export class Hand {
       ? `${INPUT_SEPARATOR}${this.drawn.toString()}`
       : "";
 
-    const tiles = this.hands.filter((v) => !v.has(OPERATOR.TSUMO));
+    const tiles = this.hands.filter((v) => !v.has(OP.TSUMO));
     const b = new BlockHand(tiles).toString();
     return `${b}${tsumo}${called}`;
   }
@@ -173,7 +173,7 @@ export class Hand {
     for (const t of tiles) {
       if (
         (t.t != TYPE.BACK && this.get(t.t, t.n) >= 4) ||
-        (t.has(OPERATOR.RED) && this.get(t.t, 0) > 0)
+        (t.has(OP.RED) && this.get(t.t, 0) > 0)
       ) {
         this.dec(backup);
         throw new Error(`unable to increase ${t} in ${this.toString()}`);
@@ -184,7 +184,7 @@ export class Hand {
       if (t.t == TYPE.BACK) this.data[t.t][1] += 1;
       else {
         this.data[t.t][t.n] += 1;
-        if (t.has(OPERATOR.RED)) this.data[t.t][0] += 1;
+        if (t.has(OP.RED)) this.data[t.t][0] += 1;
       }
     }
     return backup;
@@ -192,10 +192,7 @@ export class Hand {
   dec(tiles: readonly Tile[]): readonly Tile[] {
     const backup: Tile[] = [];
     for (const t of tiles) {
-      if (
-        this.get(t.t, t.n) < 1 ||
-        (t.has(OPERATOR.RED) && this.get(t.t, 0) <= 0)
-      ) {
+      if (this.get(t.t, t.n) < 1 || (t.has(OP.RED) && this.get(t.t, 0) <= 0)) {
         this.inc(backup);
         throw new Error(
           `unable to decrease ${t.toString()} in ${this.toString()}`
@@ -207,13 +204,13 @@ export class Hand {
       if (t.t == TYPE.BACK) this.data[t.t][1] -= 1;
       else {
         this.data[t.t][t.n] -= 1;
-        if (t.has(OPERATOR.RED)) this.data[t.t][0] -= 1;
+        if (t.has(OP.RED)) this.data[t.t][0] -= 1;
       }
 
       // r5 ではなく 5 で減算される際に最後の牌が red であれば red を 0 にする。
       if (isNum5(t) && this.get(t.t, 5) == 0 && this.get(t.t, 0) > 0) {
         this.data[t.t][0] = 0;
-        const c = backup.pop()!.clone({ add: OPERATOR.RED });
+        const c = backup.pop()!.clone({ add: OP.RED });
         backup.push(c);
       }
     }
@@ -221,7 +218,7 @@ export class Hand {
     return backup;
   }
   draw(t: Tile) {
-    const ts = t.clone({ add: OPERATOR.TSUMO });
+    const ts = t.clone({ add: OP.TSUMO });
     this.inc([ts]);
     this.data.tsumo = ts;
     return;
@@ -237,7 +234,7 @@ export class Hand {
     this.data.reached = true;
   }
   call(b: BlockPon | BlockChi | BlockDaiKan) {
-    const toRemove = b.tiles.filter((v) => !v.has(OPERATOR.HORIZONTAL));
+    const toRemove = b.tiles.filter((v) => !v.has(OP.HORIZONTAL));
     if (toRemove.length != b.tiles.length - 1)
       throw new Error(`removal: ${toRemove} block: ${b}`);
 
@@ -261,7 +258,7 @@ export class Hand {
       if (idx == -1) throw new Error(`unable to find ${b.tiles[0]}`);
       let t = b.tiles[0];
       // 適当に選んだ牌が red であればエラーが発生しないように red を削除して dec する
-      t = isNum5(t) ? t.clone({ remove: OPERATOR.RED }) : t;
+      t = isNum5(t) ? t.clone({ remove: OP.RED }) : t;
       this.dec([t]);
       // remove an existing pon block and add kakan block
       this.data.called = [
@@ -508,9 +505,7 @@ export class BlockCalculator {
   markDrawn(hands: readonly Block[][], lastTile: Tile): readonly Block[][] {
     if (hands.length == 0) return [];
     const op =
-      this.hand.drawn != null || lastTile.has(OPERATOR.TSUMO)
-        ? OPERATOR.TSUMO
-        : OPERATOR.RON;
+      this.hand.drawn != null || lastTile.has(OP.TSUMO) ? OP.TSUMO : OP.RON;
 
     const indexes: [number, number, number][] = [];
     for (let i = 0; i < hands.length; i++) {
@@ -520,9 +515,7 @@ export class BlockCalculator {
         const block = hand[j];
         if (block.isCalled()) continue;
         const k = block.tiles.findIndex(
-          (t) =>
-            t.equals(lastTile) &&
-            lastTile.has(OPERATOR.RED) == t.has(OPERATOR.RED)
+          (t) => t.equals(lastTile) && lastTile.has(OP.RED) == t.has(OP.RED)
         );
         if (k < 0) continue;
         const key = buildKey(block);
@@ -874,7 +867,7 @@ export class DoubleCalculator {
     if (sum > 13 && sum < 26) base = 8000; // 数え役満
 
     const isTsumo = patterns[idx].hand.some((b) =>
-      b.tiles.some((t) => t.has(OPERATOR.TSUMO))
+      b.tiles.some((t) => t.has(OP.TSUMO))
     );
     const myWind = this.cfg.orig.myWind;
     const isParent = myWind == WIND.E;
@@ -1006,7 +999,7 @@ export class DoubleCalculator {
   dB1(h: readonly Block[]) {
     if (this.minus() != 0) return [];
     if (this.hand.drawn == null) [];
-    const cond = h.some((b) => b.tiles.some((t) => t.has(OPERATOR.TSUMO)));
+    const cond = h.some((b) => b.tiles.some((t) => t.has(OP.TSUMO)));
     return cond ? [{ name: "門前清自摸和", double: 1 }] : [];
   }
   dC1(h: readonly Block[]) {
@@ -1014,7 +1007,7 @@ export class DoubleCalculator {
     const yaku = "平和";
     const fu = this.calcFu(h);
     if (fu == 20) return [{ name: yaku, double: 1 }];
-    if (!h.some((b) => b.tiles.some((t) => t.has(OPERATOR.TSUMO)))) {
+    if (!h.some((b) => b.tiles.some((t) => t.has(OP.TSUMO)))) {
       if (fu == 30) return [{ name: yaku, double: 1 }];
     }
     return [];
@@ -1070,7 +1063,7 @@ export class DoubleCalculator {
       for (const t of b.tiles) {
         for (const d of this.cfg.doras) if (t.equals(d)) dcount++;
         for (const d of this.cfg.blindDoras) if (t.equals(d)) bcount++;
-        if (t.has(OPERATOR.RED)) rcount++;
+        if (t.has(OP.RED)) rcount++;
       }
     }
 
@@ -1125,7 +1118,7 @@ export class DoubleCalculator {
     const l = h.filter((b) => {
       return (
         (b instanceof BlockAnKan || b instanceof BlockThree) &&
-        !b.tiles.some((t) => t.has(OPERATOR.RON)) // ignore ron
+        !b.tiles.some((t) => t.has(OP.RON)) // ignore ron
       );
     }).length;
     return l >= 3 ? [{ name: "三暗刻", double: 2 }] : [];
@@ -1261,7 +1254,7 @@ export class DoubleCalculator {
     const double = h.some(
       (b) =>
         b instanceof BlockPair &&
-        b.tiles.some((t) => t.has(OPERATOR.TSUMO) || t.has(OPERATOR.RON))
+        b.tiles.some((t) => t.has(OP.TSUMO) || t.has(OP.RON))
     );
     return double
       ? [{ name: "国士無双13面待ち", double: 26 }]
@@ -1275,15 +1268,14 @@ export class DoubleCalculator {
     const cond1 = h.every(
       (b) =>
         b instanceof BlockAnKan ||
-        (b instanceof BlockThree &&
-          !b.tiles.some((t) => t.has(OPERATOR.RON))) ||
+        (b instanceof BlockThree && !b.tiles.some((t) => t.has(OP.RON))) ||
         b instanceof BlockPair
     );
     if (!cond1) return [];
     const cond2 = h.some(
       (b) =>
         b instanceof BlockPair &&
-        b.tiles.every((t) => t.has(OPERATOR.TSUMO) || t.has(OPERATOR.RON))
+        b.tiles.every((t) => t.has(OP.TSUMO) || t.has(OP.RON))
     );
     return cond2
       ? [{ name: "四暗刻単騎待ち", double: 26 }]
@@ -1363,10 +1355,10 @@ export class DoubleCalculator {
     if (h.length == 7) return 25;
 
     const lastBlock = h.find((b) =>
-      b.tiles.some((t) => t.has(OPERATOR.TSUMO) || t.has(OPERATOR.RON))
+      b.tiles.some((t) => t.has(OP.TSUMO) || t.has(OP.RON))
     )!;
     const isCalled = this.minus() == 1;
-    const isTsumo = lastBlock.tiles.some((t) => t.has(OPERATOR.TSUMO));
+    const isTsumo = lastBlock.tiles.some((t) => t.has(OP.TSUMO));
 
     // 刻子
     const calcTriple = (b: Block, base: number) => {
@@ -1381,7 +1373,7 @@ export class DoubleCalculator {
     for (const b of h) {
       switch (true) {
         case b instanceof BlockThree:
-          const v = b.tiles.some((t) => t.has(OPERATOR.RON)) ? 2 : 4;
+          const v = b.tiles.some((t) => t.has(OP.RON)) ? 2 : 4;
           fu += calcTriple(b, v);
           break;
         case b instanceof BlockPon:
@@ -1401,9 +1393,7 @@ export class DoubleCalculator {
       if (b instanceof BlockThree) return 0; // シャンポン
       if (b instanceof BlockPair) return 2; // 単騎
       const tiles = b.tiles;
-      const idx = tiles.findIndex(
-        (t) => t.has(OPERATOR.TSUMO) || t.has(OPERATOR.RON)
-      );
+      const idx = tiles.findIndex((t) => t.has(OP.TSUMO) || t.has(OP.RON));
       if (idx == 1) return 2; // カンチャン
       else if (idx == 0 && tiles[2].n == 9) return 2; //ペンチャン
       else if (idx == 2 && tiles[0].n == 1) return 2; //ペンチャン

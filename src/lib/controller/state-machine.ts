@@ -1,4 +1,4 @@
-import { Wind, TYPE, WIND, OPERATOR } from "../core/constants";
+import { Wind, TYPE, WIND, OP } from "../core/constants";
 import {
   ChoiceAfterDiscardedEvent,
   ChoiceAfterDrawnEvent,
@@ -466,7 +466,7 @@ export const createControllerMachine = (c: Controller) => {
         notify_choice_after_discarded: ({ context, event }) => {
           const id = context.genEventID();
           const discarded = context.controller.river.lastTile;
-          const ltile = discarded.t.clone({ add: OPERATOR.HORIZONTAL });
+          const ltile = discarded.t.clone({ add: OP.HORIZONTAL });
           for (const w of Object.values(WIND)) {
             const e: ChoiceAfterDiscardedEvent = {
               id: id,
@@ -526,7 +526,7 @@ export const createControllerMachine = (c: Controller) => {
         notify_choice_for_reach_acceptance: ({ context, event }) => {
           const id = context.genEventID();
           const discarded = context.controller.river.lastTile;
-          const ltile = discarded.t.clone({ add: OPERATOR.HORIZONTAL });
+          const ltile = discarded.t.clone({ add: OP.HORIZONTAL });
           for (const w of Object.values(WIND)) {
             const e: ChoiceForReachAcceptance = {
               id: id,
@@ -553,11 +553,11 @@ export const createControllerMachine = (c: Controller) => {
             `unexpected event ${event.type}`
           );
           const id = context.genEventID();
-          const t = event.block.tiles[0].clone({ remove: OPERATOR.HORIZONTAL });
+          const t = event.block.tiles[0].clone({ remove: OP.HORIZONTAL });
           for (const w of Object.values(WIND)) {
             const ron = context.controller.doWin(
               w,
-              event.block.tiles[0].clone({ remove: OPERATOR.HORIZONTAL }),
+              event.block.tiles[0].clone({ remove: OP.HORIZONTAL }),
               {
                 discardedBy: event.iam,
                 quadWin: true,
@@ -638,7 +638,7 @@ export const createControllerMachine = (c: Controller) => {
             context.missingMap[iam] = false;
 
           for (const w of Object.values(WIND)) {
-            let t = new Tile(TYPE.BACK, 0, [OPERATOR.TSUMO]); // mask tile for other players
+            let t = new Tile(TYPE.BACK, 0, [OP.TSUMO]); // mask tile for other players
             if (w == iam) t = drawn;
             const e = {
               id: id,
@@ -691,7 +691,7 @@ export const createControllerMachine = (c: Controller) => {
           assert(event.type == "REACH", `unexpected event ${event.type}`);
           const id = context.genEventID();
           const iam = event.iam;
-          const t = event.tile.clone({ add: OPERATOR.HORIZONTAL });
+          const t = event.tile.clone({ add: OP.HORIZONTAL });
           context.oneShotMap[iam] = true; // enable one shot
           for (const w of Object.values(WIND)) {
             const e: ReachEvent = {

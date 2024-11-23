@@ -1,12 +1,4 @@
-import {
-  Wind,
-  Round,
-  TYPE,
-  WIND,
-  createWindMap,
-  OPERATOR,
-  ROUND,
-} from "../core/";
+import { Wind, Round, TYPE, WIND, createWindMap, OP, ROUND } from "../core/";
 import { TupleOfSize } from "../calculator";
 import { Tile } from "../core/parser";
 import { nextWind, nextRound, Type } from "../core";
@@ -117,7 +109,7 @@ export class Counter {
         );
       this.c[t.t][t.n] -= 1;
       // FIXME validate red has more than 0
-      if (t.has(OPERATOR.RED)) this.c[t.t][0] -= 1;
+      if (t.has(OP.RED)) this.c[t.t][0] -= 1;
     }
   }
   addTileToSafeMap(t: Tile, targetUser: Wind) {

@@ -1,4 +1,4 @@
-import { OPERATOR, Tile, Type } from "../core";
+import { OP, Tile, Type } from "../core";
 import { assert } from "../myassert";
 import { Hand, ShantenCalculator, forHand } from "./calc";
 
@@ -36,10 +36,10 @@ export class Efficiency {
       hand.inc(tiles);
       // convert 0 and remove operators
       const da =
-        options?.arrangeRed && t.has(OPERATOR.RED)
+        options?.arrangeRed && t.has(OP.RED)
           ? t.clone({ removeAll: true })
-          : t.has(OPERATOR.RED)
-          ? t.clone({ removeAll: true, add: OPERATOR.RED })
+          : t.has(OP.RED)
+          ? t.clone({ removeAll: true, add: OP.RED })
           : t.clone({ removeAll: true });
       if (c.shanten < minShanten) {
         map.clear();
